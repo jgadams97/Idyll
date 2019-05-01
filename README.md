@@ -49,10 +49,11 @@ This will print numbers 0 through 9.
 The IF command can be used for conditional statements. The block of code between IF and FI will get executed only if the condition between IF and "then" is true.
 
 The format of an IF command is:
-
+```
 if LHS comparator RHS then
 	...
 fi
+```
 Valid comparators are:
 ```
 >=	Greater than or equal to.
