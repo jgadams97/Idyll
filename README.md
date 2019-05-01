@@ -1,6 +1,6 @@
 IdyllicBASIC is a variant of BASIC that encapsulates memory management.
 
-This means two things: 1. Idyllic scripts can be executed from program memory without loading them into RAM. 2. Idyllic scripts can store its variables within external memory devices.
+This means two things: 1. Idyllic scripts can be executed from program memory without loading them into RAM. 2. Idyllic scripts can store its variables within external memory devices. This includes anything from an external RAM to even a hard disk drive or an SD card.  
 
 Both of these things make Idyllic ideal for low-memory applications. The ATMega328P microcontroller, for example, has 2 KB of RAM. Normally, this would be not be enough to run BASIC scripts, as you could only fit a few lines of code into RAM.
 
