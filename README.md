@@ -1,4 +1,4 @@
-IdyllicBASIC is a variant of BASIC that encapsulates memory management.I
+IdyllicBASIC is a variant of BASIC that encapsulates memory management.
 
 This means two things: 1. Idyllic scripts can be executed from program memory without loading them into RAM. 2. Idyllic scripts can store its variables within external memory devices.
 
@@ -7,9 +7,10 @@ Both of these things make Idyllic ideal for low-memory applications. The ATMega3
 However, Idyllic can make use of external RAMs and program memory. The BASIC program does not need to be loaded into RAM to run, and all variables could be stored in an external RAM. The 23LC1024, for example, can store 1 megabit of RAM, which can be used for variable storage with Idyllic. Idyllic stores variables using 32-bit pointers, so it can handle external memory devices up to 4.2 gigabytes. It can easily be recompiled with 64-bit pointers if need be. Idyllic also stores these variables using AVL trees, so lookup times are fast.
 
 Variables in Idyllic can be declared with the DIM command.
-
+```
 dim myVar
 dim $myVar[15]
+```
 There are three main data types in Idyllic: 1. Numbers. 2. Strings. 3. Addresses.
 
 Only numbers and strings can be directly manipulated by the user. Strings begin with a "$" character. Addresses begin "@". Numbers begin with nothing.
