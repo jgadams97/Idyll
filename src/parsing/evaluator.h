@@ -44,7 +44,7 @@ char LINE_BUFF[LINE_BUFF_MAX + 1];
 //Gets the type of expression (either a number or a string)
 char getExprType(ibword pos, ibword size);
 
-//Appends a floating point number to the end of EVAL_BUFF.
+//Appends a floating poibword number to the end of EVAL_BUFF.
 void appendNum(float num);
 
 //Appends an address to the end of EVAL_BUFF.

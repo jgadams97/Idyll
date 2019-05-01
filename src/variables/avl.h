@@ -9,7 +9,7 @@ typedef struct _avl_node {
 	ibword address;
 	ibword size;
 	ibword parent;
-	int height;
+	ibword height;
 } AVL_Node;
 
 //Create a new node.
@@ -18,10 +18,10 @@ AVL_Node newNode(ibword address, ibword size, char *key, ibword left, ibword rig
 //Fetch a node from RAM.
 AVL_Node fetchNode(ibword pos);
 
-//Store a node into RAM.
+//Store a node ibwordo RAM.
 void storeNode(AVL_Node *n);
 
-//Pushes a node into RAM.
+//Pushes a node ibwordo RAM.
 //	Returns the address it was stored at.
 ibword pushNode(AVL_Node *n);
 
@@ -44,16 +44,16 @@ void caseLeftRight(AVL_Node z);
 void caseRightLeft(AVL_Node z);
 
 //Calculate the balance factor of a node.
-int getNodeBalance(AVL_Node *node);
+ibword getNodeBalance(AVL_Node *node);
 
 //Inserts a new node to a tree.
 //	Returns the address of the node.
 ibword insertNode(AVL_Node *node);
 
-//Print a node.
+//Pribword a node.
 //void printNode(AVL_Node n);
 
-//Print an entire tree whose root is located as pos.
+//Pribword an entire tree whose root is located as pos.
 void printTree(ibword pos);
 
 //Find a node from a given key.

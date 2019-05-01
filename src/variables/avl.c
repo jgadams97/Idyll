@@ -1,17 +1,17 @@
-int unistrcmp(char *str_a, char *str_b) {
-	for (int i = 0;; i++) {
+ibword unistrcmp(char *str_a, char *str_b) {
+	for (ibword i = 0;; i++) {
 		if (str_a[i] == 0 && str_b[i] == 0) {
 			return 0;
 		}
 		if (str_a[i] == 0) {
-			for (int j = i;; j++) {
+			for (ibword j = i;; j++) {
 				if (str_b[j] == 0) {
 					return i - j;
 				}
 			}
 		}
 		if (str_b[i] == 0) {
-			for (int j = i;; j++) {
+			for (ibword j = i;; j++) {
 				if (str_a[j] == 0) {
 					return j - i;
 				}
@@ -24,15 +24,15 @@ int unistrcmp(char *str_a, char *str_b) {
 	return 0;	
 }
 
-void unimemcpy(void *vptr_a, void *vptr_b, int size) {
+void unimemcpy(void *vptr_a, void *vptr_b, ibword size) {
 	char *ptr_a = (char*)vptr_a;
 	char *ptr_b = (char*)vptr_b;
-	for (int i = 0; i < size; i++) {
+	for (ibword i = 0; i < size; i++) {
 		*(ptr_a + i) = *(ptr_b + i);;
 	}
 }
 
-void intToString(char *str, int num) {
+void ibwordToString(char *str, ibword num) {
 	char pos = 0;
 	bool negative = false;
 	if (num == 0) {
@@ -61,18 +61,18 @@ void intToString(char *str, int num) {
 
 
 void floatToString(char *str, float num) {
-	intToString(str, (int)num);
+	ibwordToString(str, (ibword)num);
 	char pos = -1;
 	while (str[++pos] != 0);
-	num = num - (int)num;
+	num = num - (ibword)num;
 	if (num < 0) num *= -1;
-	int places = 0;
+	ibword places = 0;
 	if (num != 0) {
 		str[pos++] = '.';
 		while (num != 0) {
 			num *= 10;
-			str[pos++] = (int)num + '0';
-			num = num - (int)num;
+			str[pos++] = (ibword)num + '0';
+			num = num - (ibword)num;
 			places++;
 			if (places == 7) break;
 		}
@@ -83,7 +83,7 @@ void floatToString(char *str, float num) {
 }
 
 void printString(const char *str) {
-	int pos = 0;
+	ibword pos = 0;
 	char c = str[pos++];
 	while (c != 0) {
 		writeChar(c);
@@ -91,15 +91,15 @@ void printString(const char *str) {
 	}
 }
 
-void printInt(int num) {
-	int pos = 0;
+void printInt(ibword num) {
+	ibword pos = 0;
 	char numBuff[11];
-	intToString(numBuff, num);
+	ibwordToString(numBuff, num);
 	printString(numBuff);
 }
 
 void printFloat(float num) {
-	int pos = 0;
+	ibword pos = 0;
 	char numBuff[20];
 	floatToString(numBuff, num);
 	printString(numBuff);
@@ -186,9 +186,9 @@ AVL_Node fetchNode(ibword pos) {
 		buff[i] = readRAM(i + pos);
 	}
 	
-	/*writeRAM(64, (int)-128);
+	/*writeRAM(64, (ibword)-128);
 	Serial.print("]");
-	Serial.print((int)readRAM(64));
+	Serial.print((ibword)readRAM(64));
 	Serial.println("[");*/
 	
 	
@@ -198,7 +198,7 @@ AVL_Node fetchNode(ibword pos) {
 	return ret;
 }
 
-//Store a node into RAM.
+//Store a node ibwordo RAM.
 void storeNode(AVL_Node *n) {
 	char buff[sizeof(AVL_Node)];
 	unimemcpy(buff, n, sizeof(AVL_Node));
@@ -207,7 +207,7 @@ void storeNode(AVL_Node *n) {
 	}
 }
 
-//Pushes a node into RAM.
+//Pushes a node ibwordo RAM.
 //	Returns the address it was stored at.
 ibword pushNode(AVL_Node *n) {
 	n->address = AVL_END;
@@ -222,7 +222,7 @@ ibword pushNode(AVL_Node *n) {
 
 
 void updateHeight(AVL_Node *node) {
-	int leftHeight, rightHeight, height;
+	ibword leftHeight, rightHeight, height;
 	if (node->left == undefined) leftHeight = 0;
 	else leftHeight = fetchNode(node->left).height;
 	if (node->right == undefined) rightHeight = 0;
@@ -475,8 +475,8 @@ void caseRightLeft(AVL_Node z) {
 }
 
 //Calculate the balance factor of a node.
-int getNodeBalance(AVL_Node *node) {
-	int leftHeight, rightHeight;
+ibword getNodeBalance(AVL_Node *node) {
+	ibword leftHeight, rightHeight;
 	if (node->left == undefined) leftHeight = 0;
 	else leftHeight = fetchNode(node->left).height;
 	if (node->right == undefined) rightHeight = 0;
@@ -503,7 +503,7 @@ ibword insertNode(AVL_Node *node) {
 	
 	//Go to the bottom.
 	while (1) {
-		int comparison = unistrcmp(node->key, root.key);
+		ibword comparison = unistrcmp(node->key, root.key);
 		if (comparison == 0) {
 			return undefined;
 		}
@@ -530,7 +530,7 @@ ibword insertNode(AVL_Node *node) {
 	
 	//Go back up to the top.
 	AVL_Node pnode;
-	int balance, pbalance;
+	ibword balance, pbalance;
 	for (ibword i = 1; i <= height + 1; i++) {
 		if (i + 1 > root.height) {
 			root.height = i + 1;
@@ -593,7 +593,7 @@ ibword findNode(char *tkey) {
 	
 	//Go to the bottom.
 	while (1) {
-		int comparison = unistrcmp(key, root.key);
+		ibword comparison = unistrcmp(key, root.key);
 		if (comparison == 0) {
 			return root.address;
 		}
@@ -612,7 +612,7 @@ ibword findNode(char *tkey) {
 	}
 }
 
-//Print a node.
+//Pribword a node.
 void printNode(AVL_Node n) {
 	/*if (n.address == -1) printString("Address: undefined\n");
 	else printf("Address: %u\n", n.address);

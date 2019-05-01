@@ -7,7 +7,7 @@ void dimNum(char *name, float value) {
 	AVL_Node n = newNode(undefined, sizeof(float), name, undefined, undefined);
 	ibword address = insertNode(&n);
 	
-	//Store value into node.
+	//Store value ibwordo node.
 	char buffer[sizeof(float)];
 	unimemcpy(buffer, &value, sizeof(float));
 	for (char i = 0; i < sizeof(float); i++) {
@@ -23,7 +23,7 @@ void dimAdr(char *name, ibword value) {
 	AVL_Node n = newNode(undefined, sizeof(ibword), name, undefined, undefined);
 	ibword address = insertNode(&n);
 	
-	//Store value into node.
+	//Store value ibwordo node.
 	char buffer[sizeof(ibword)];
 	unimemcpy(buffer, &value, sizeof(ibword));
 	for (char i = 0; i < sizeof(ibword); i++) {
@@ -42,7 +42,7 @@ void dimStr(char *name, ibword size) {
 //Reads a number variable at an address.
 float readNum(ibword address) {;
 	float value;	
-	//Store value into node.
+	//Store value ibwordo node.
 	char buffer[sizeof(float)];
 	for (char i = 0; i < sizeof(float); i++) {
 		buffer[i] = readRAM(address + sizeof(AVL_Node) + i);
@@ -54,7 +54,7 @@ float readNum(ibword address) {;
 //Reads an address variable at an address.
 ibword readAdr(ibword address) {;
 	ibword value;	
-	//Store value into node.
+	//Store value ibwordo node.
 	char buffer[sizeof(ibword)];
 	for (char i = 0; i < sizeof(ibword); i++) {
 		buffer[i] = readRAM(address + sizeof(AVL_Node) + i);
@@ -72,7 +72,7 @@ char readStr(ibword address, ibword index) {
 
 //Reads a number variable at an address.
 void writeNum(ibword address, float value) {
-	//Store value into node.
+	//Store value ibwordo node.
 	char buffer[sizeof(float)];
 	unimemcpy(buffer, &value, sizeof(float));
 	for (char i = 0; i < sizeof(float); i++) {

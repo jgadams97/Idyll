@@ -47,7 +47,7 @@ bool exec(ibword pos) {
 	}
 	if (c == 0) return true;
 	
-	//Copy command into the command buffer.
+	//Copy command ibwordo the command buffer.
 	for (byte i = 0; i < 8; i++) {
 		COMMAND_BUFFER[i] = 8;
 	}

@@ -10,11 +10,11 @@ char getExprType(ibword pos, ibword size) {
 }
 
 
-//Appends a floating point number to the end of EVAL_BUFF.
+//Appends a floating poibword number to the end of EVAL_BUFF.
 void appendNum(float num) {
 	char buff[20];
-	if ( (int)num == num )
-		intToString(buff, (int)num);
+	if ( (ibword)num == num )
+		ibwordToString(buff, (ibword)num);
 	else
 		floatToString(buff, num);
 	
@@ -26,7 +26,7 @@ void appendNum(float num) {
 //Appends an address to the end of EVAL_BUFF.
 void appendAdr(ibword num) {
 	char buff[20];
-	intToString(buff, num);
+	ibwordToString(buff, num);
 	for (char i = 0; i < strlen(buff); i++) {
 		EVAL_BUFF[EVAL_LEN++] = buff[i];
 	}
@@ -115,7 +115,7 @@ bool copyFormulaIntoEvalBuff(ibword pos, ibword size) {
 		else appendNum(readNum(addr));
 	}
 	
-	//Need +0 in case no internal operator.
+	//Need +0 in case no ibwordernal operator.
 	EVAL_BUFF[EVAL_LEN++] = '+';
 	EVAL_BUFF[EVAL_LEN++] = '0';
 	EVAL_BUFF[EVAL_LEN++] = ')';

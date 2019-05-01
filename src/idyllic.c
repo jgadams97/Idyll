@@ -18,7 +18,7 @@ print $bob
 //	Otherwise returns offset.
 
 void copyStringIntoLineBuff(char *s) {
-	int i = 0;
+	ibword i = 0;
 	char c = s[0];
 	while (!isEOL(c)) {
 		LINE_BUFF[i] = c;
@@ -30,7 +30,7 @@ void copyStringIntoLineBuff(char *s) {
 }
 
 ibword copyFileIntoLineBuff(ibword pos) {
-	int i = 0;
+	ibword i = 0;
 	char c = readFile(pos);
 	while (!isEOL(c)) {
 		LINE_BUFF[i++] = c;
@@ -48,7 +48,7 @@ ibword copyFileIntoLineBuff(ibword pos) {
 //Evaluate a reference statement.
 //	0	No Error.
 char evalReference(ibword addr) {
-	int pos = 0;
+	ibword pos = 0;
 	char c;
 	char key[KEY_SIZE + 1];
 	char p = 0;
@@ -93,7 +93,7 @@ char evalAssignment() {
 	char c;
 	char key[KEY_SIZE];
 	char keyPos = 0;
-	int pos = 0;
+	ibword pos = 0;
 	
 	//Skip over white space.
 	c = LINE_BUFF[pos];
@@ -139,8 +139,8 @@ char evalAssignment() {
 	
 	//Find start and size.
 	c = LINE_BUFF[++pos];
-	int start = pos;
-	int size = 0;
+	ibword start = pos;
+	ibword size = 0;
 	while (!isEOL(c)) {
 		c = LINE_BUFF[++pos];
 		size++;
@@ -415,7 +415,7 @@ char evalDeclaration() {
 	char c;
 	char key[KEY_SIZE];
 	char keyPos = 0;
-	int pos = 0;
+	ibword pos = 0;
 	char ret = 0;
 	bool containsAssignment = false;
 	
@@ -582,7 +582,7 @@ char evalCommand() {
 	
 	char command[10];
 	char commandPos = 0;
-	int pos = 0;
+	ibword pos = 0;
 	bool isInQuotes = false;
 	
 	//Get start of command.
@@ -699,7 +699,7 @@ char evalCommand() {
 
 //Identifies the type of line.
 char identifyLineType() {
-	int pos = 0;
+	ibword pos = 0;
 	bool checkedM = false;
 	bool isDeclaration = true;
 	bool isConditional = true;
@@ -779,7 +779,7 @@ char evalLine(ibword pos, ibword addr) {
 	return ret;
 }
 
-//Prints an error message associated
+//Pribwords an error message associated
 //	with an error code.
 void printError(char e) {
 
@@ -831,7 +831,7 @@ void printError(char e) {
 char eval(ibword pos) {
 	ibword size;
 	char eof = 10;
-	int skipMode = 0;
+	ibword skipMode = 0;
 	
 	while (eof == 10) {
 		size = copyFileIntoLineBuff(pos);
@@ -857,7 +857,7 @@ char eval(ibword pos) {
 			//This error means something occurred
 			//	that requires changing the address.
 			if (err == ERROR_CHANGE_ADDRESS) {
-				pos = (int)evaluateFormula();
+				pos = (ibword)evaluateFormula();
 				eof = 10;
 				continue;
 			} else if (err == ERROR_CONDITIONAL_TRIGGERED) {

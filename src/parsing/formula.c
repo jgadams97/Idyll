@@ -149,17 +149,17 @@ void evaluateFormulaOnce() {
 	} else if (oper == '=') {
 		output = LHS == RHS;
 	} else if (oper == '>') {
-		output = (int)LHS >> (int)RHS;
+		output = (ibword)LHS >> (ibword)RHS;
 	} else if (oper == '<') {
-		output = (int)LHS << (int)RHS;
+		output = (ibword)LHS << (ibword)RHS;
 	} else if (oper == '%') {
-		output = (int)LHS % (int)RHS;
+		output = (ibword)LHS % (ibword)RHS;
 	} else if (oper == '|') {
-		output = (int)LHS | (int)RHS;
+		output = (ibword)LHS | (ibword)RHS;
 	} else if (oper == '&') {
-		output = (int)LHS & (int)RHS;
+		output = (ibword)LHS & (ibword)RHS;
 	} else if (oper == '^') {
-		output = (int)LHS ^ (int)RHS;
+		output = (ibword)LHS ^ (ibword)RHS;
 	} else if (oper == '~') {
 		output = LHS != RHS;
 	}
@@ -196,7 +196,7 @@ float evaluateFormula() {
 	return journal_pop(0);
 }
 
-//Loads a formula from program memory into the EVAL_BUFF.
+//Loads a formula from program memory ibwordo the EVAL_BUFF.
 bool loadFormula(ibword pos) {
 	//012345678
 	//5+(5+0*2)

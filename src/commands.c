@@ -170,7 +170,7 @@ if (compareIgnoreCase(command, "$charat")) {
 	if (outputKey[0] != '$')
 		return ERROR_INVALID_TYPE;
 		
-	int index = (int)evaluateFormula();
+	ibword index = (ibword)evaluateFormula();
 	
 	char key[KEY_SIZE + 1];
 	char i;
@@ -187,8 +187,8 @@ if (compareIgnoreCase(command, "$charat")) {
 	if (addr == undefined)
 		return ERROR_KEY_NOT_FOUND;
 	
-	int size_a = readStrSize(addr);
-	int size_b = readStrSize(outputAddress);
+	ibword size_a = readStrSize(addr);
+	ibword size_b = readStrSize(outputAddress);
 	
 	if (index >= size_a)
 		return ERROR_OUT_OF_BOUNDS;
@@ -222,7 +222,7 @@ if (compareIgnoreCase(command, "charcodeat")) {
 	if (outputKey[0] == '$' || outputKey[0] == '@')
 		return ERROR_INVALID_TYPE;
 		
-	int index = (int)evaluateFormula();
+	ibword index = (ibword)evaluateFormula();
 	
 	char key[KEY_SIZE + 1];
 	char i;
@@ -239,7 +239,7 @@ if (compareIgnoreCase(command, "charcodeat")) {
 	if (addr == undefined)
 		return ERROR_KEY_NOT_FOUND;
 	
-	int size_a = readStrSize(addr);
+	ibword size_a = readStrSize(addr);
 	if (index >= size_a)
 		return ERROR_OUT_OF_BOUNDS;
 	
