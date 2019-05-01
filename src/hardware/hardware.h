@@ -5,15 +5,15 @@
 typedef unsigned char bool;
 #endif
 #define undefined -1
-typedef unsigned int word;
-char readRAM(word pos);
-void writeRAM(word pos, char b);
+typedef unsigned int ibword;
+char readRAM(ibword pos);
+void writeRAM(ibword pos, char b);
 void writeChar(char c);
 char readChar();
 bool fileExists(char *fname);
 void openFile(char *fname);
 void closeFile();
-char readFile(word pos);
+char readFile(ibword pos);
 #ifdef ATMEGA328P
 //#include "23LC1024.h"
 //#include <SD.h>

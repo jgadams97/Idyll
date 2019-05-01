@@ -197,7 +197,7 @@ float evaluateFormula() {
 }
 
 //Loads a formula from program memory into the EVAL_BUFF.
-bool loadFormula(word pos) {
+bool loadFormula(ibword pos) {
 	//012345678
 	//5+(5+0*2)
 

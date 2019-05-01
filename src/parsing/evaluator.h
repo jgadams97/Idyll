@@ -35,20 +35,20 @@
 #define TYPE_EMPTY 7
 #define LINE_BUFF_MAX 100
 #define STRING_SIZE_MAX 1000
-word EVAL_POS = 0;
-word EVAL_ADR = undefined;
-word EVAL_STR_SIZE = 0;
+ibword EVAL_POS = 0;
+ibword EVAL_ADR = undefined;
+ibword EVAL_STR_SIZE = 0;
 bool EVAL_STR = false;
 char LINE_BUFF[LINE_BUFF_MAX + 1];
 
 //Gets the type of expression (either a number or a string)
-char getExprType(word pos, word size);
+char getExprType(ibword pos, ibword size);
 
 //Appends a floating point number to the end of EVAL_BUFF.
 void appendNum(float num);
 
 //Appends an address to the end of EVAL_BUFF.
-void appendAdr(word num);
+void appendAdr(ibword num);
 
 //Copies a numeric formula to EVAL_BUFF for numeric processing.
 //	Returns false if a variable didn't exist.

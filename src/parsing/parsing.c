@@ -33,7 +33,7 @@ bool isCommand(byte command_index) {
 
 
 //Gets argument count.
-bool exec(word pos) {
+bool exec(ibword pos) {
 	//Variables used...
 	byte i = 0;
 	byte valid = false;

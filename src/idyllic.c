@@ -1,5 +1,5 @@
 #include "parsing/evaluator.h"
-char eval(word pos);
+char eval(ibword pos);
 /*
 dim x
 x = 0
@@ -29,7 +29,7 @@ void copyStringIntoLineBuff(char *s) {
 	LINE_BUFF[i] = 0;
 }
 
-word copyFileIntoLineBuff(word pos) {
+ibword copyFileIntoLineBuff(ibword pos) {
 	int i = 0;
 	char c = readFile(pos);
 	while (!isEOL(c)) {
@@ -47,7 +47,7 @@ word copyFileIntoLineBuff(word pos) {
 
 //Evaluate a reference statement.
 //	0	No Error.
-char evalReference(word addr) {
+char evalReference(ibword addr) {
 	int pos = 0;
 	char c;
 	char key[KEY_SIZE + 1];
@@ -124,7 +124,7 @@ char evalAssignment() {
 	if (!verifyKey(key)) return ERROR_SYNTAX;
 	
 	//Check if key exists.
-	word addr = findNode(key);
+	ibword addr = findNode(key);
 	if (addr == undefined)
 		return ERROR_KEY_NOT_FOUND;
 		
@@ -158,8 +158,8 @@ char evalAssignment() {
 			return ERROR_SYNTAX;
 		if (!copyStringIntoEvalBuff(start, size))
 			return ERROR_SYNTAX;
-		word strSize = readStrSize(addr);
-		word strPos = 0;
+		ibword strSize = readStrSize(addr);
+		ibword strPos = 0;
 		char c = readCharFromEvalBuff();
 		writeStr(addr, strPos++, c);
 		while (c = readCharFromEvalBuff()) {
@@ -182,7 +182,7 @@ char evalAssignment() {
 //	0	No error.
 char evalUnconditional() {
 	char c;
-	word pos = 0;
+	ibword pos = 0;
 	
 	//Skip over white space.
 	c = LINE_BUFF[pos];
@@ -213,10 +213,10 @@ char evalUnconditional() {
 //Evaluate a conditional.
 //	0	No error.
 char evalConditional() {
-	word lhsStart = 0;
-	word lhsSize = 0;
-	word rhsStart = 0;
-	word rhsSize = 0;
+	ibword lhsStart = 0;
+	ibword lhsSize = 0;
+	ibword rhsStart = 0;
+	ibword rhsSize = 0;
 	char cond1 = ' ';
 	char cond2 = ' ';
 	char c;
@@ -473,7 +473,7 @@ char evalDeclaration() {
 		//Syntax error.
 		char numBuff[11];
 		char numPos = 0;
-		word size = 0;
+		ibword size = 0;
 		if (c != '[')
 			return ERROR_SYNTAX;
 			
@@ -574,9 +574,9 @@ bool compareIgnoreCase(const char *a, const char *b) {
 char evalCommand() {
 
 	char outputKey[KEY_SIZE + 1];
-	word outputAddress = undefined;
-	word argsStart[10];
-	word argsSize[10];
+	ibword outputAddress = undefined;
+	ibword argsStart[10];
+	ibword argsSize[10];
 	char arg = 1;
 	char c;
 	
@@ -760,7 +760,7 @@ char identifyLineType() {
 
 //Evaluates a single line at a position.
 //	The addr should be the address of the next line.
-char evalLine(word pos, word addr) {
+char evalLine(ibword pos, ibword addr) {
 	char type = identifyLineType();
 	char ret = 0;
 	if (type == TYPE_DECLARATION) {
@@ -828,8 +828,8 @@ void printError(char e) {
 }
 
 //Evaluates a program at position.
-char eval(word pos) {
-	word size;
+char eval(ibword pos) {
+	ibword size;
 	char eof = 10;
 	int skipMode = 0;
 	

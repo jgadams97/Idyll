@@ -92,7 +92,7 @@ if (compareIgnoreCase(command, "$read")) {
 			return ERROR_INVALID_TYPE;
 		char c, outputPos;
 		outputPos = 0;
-		word size = readStrSize(outputAddress);
+		ibword size = readStrSize(outputAddress);
 		c = readChar();
 		while (c != '\n' && outputPos != size) {
 			if (c != -1)
@@ -183,7 +183,7 @@ if (compareIgnoreCase(command, "$charat")) {
 		return ERROR_INVALID_TYPE;
 	if (!verifyKey(key))
 		return ERROR_INVALID_KEY;
-	word addr = findNode(key);
+	ibword addr = findNode(key);
 	if (addr == undefined)
 		return ERROR_KEY_NOT_FOUND;
 	
@@ -235,7 +235,7 @@ if (compareIgnoreCase(command, "charcodeat")) {
 		return ERROR_INVALID_TYPE;
 	if (!verifyKey(key))
 		return ERROR_INVALID_KEY;
-	word addr = findNode(key);
+	ibword addr = findNode(key);
 	if (addr == undefined)
 		return ERROR_KEY_NOT_FOUND;
 	

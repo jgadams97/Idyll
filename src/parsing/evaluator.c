@@ -1,5 +1,5 @@
 //Gets the type of expression (either a number or a string)
-char getExprType(word pos, word size) {
+char getExprType(ibword pos, ibword size) {
 	for (char i = 0; i < size; i++) {
 		char c = LINE_BUFF[i + pos];
 		if (c == '$' || c == '\"') {
@@ -24,7 +24,7 @@ void appendNum(float num) {
 }
 
 //Appends an address to the end of EVAL_BUFF.
-void appendAdr(word num) {
+void appendAdr(ibword num) {
 	char buff[20];
 	intToString(buff, num);
 	for (char i = 0; i < strlen(buff); i++) {
@@ -41,7 +41,7 @@ void appendAdr(word num) {
 
 //Copies a numeric formula to EVAL_BUFF for numeric processing.
 //	0 No Error.
-bool copyFormulaIntoEvalBuff(word pos, word size) {
+bool copyFormulaIntoEvalBuff(ibword pos, ibword size) {
 
 	short fixerStack[20];
 	char fixerStackPos = 0;
@@ -65,7 +65,7 @@ bool copyFormulaIntoEvalBuff(word pos, word size) {
 				key[varPos++] = c;
 			} else if (!isAlphaNum(varMode) && varMode) {
 				key[varPos] = 0;
-				word addr = findNode(key);
+				ibword addr = findNode(key);
 				if (addr == undefined) return false;
 				if (key[0] == '@') appendAdr(readAdr(addr));
 				else appendNum(readNum(addr));
@@ -76,7 +76,7 @@ bool copyFormulaIntoEvalBuff(word pos, word size) {
 			if (c == '(') {
 				fixerStack[fixerStackPos++] = EVAL_LEN;
 			} else if (c == ')') {
-				word fs = fixerStack[fixerStackPos - 1];
+				ibword fs = fixerStack[fixerStackPos - 1];
 				fixerStackPos--;
 				if (fs != -1) {
 					EVAL_BUFF[EVAL_LEN++] = '+';
@@ -109,7 +109,7 @@ bool copyFormulaIntoEvalBuff(word pos, word size) {
 	}
 	if (varMode) {
 		key[varPos] = 0;
-		word addr = findNode(key);
+		ibword addr = findNode(key);
 		if (addr == undefined) return false;
 		if (key[0] == '@') appendAdr(readAdr(addr));
 		else appendNum(readNum(addr));
@@ -124,7 +124,7 @@ bool copyFormulaIntoEvalBuff(word pos, word size) {
 	//Remove underscores added.
 	size = EVAL_LEN;
 	EVAL_LEN = 0;
-	for (word i = 0; i < size; i++) {
+	for (ibword i = 0; i < size; i++) {
 		c = EVAL_BUFF[i];
 		if (c != '_') {
 			EVAL_BUFF[EVAL_LEN++] = c;
@@ -137,7 +137,7 @@ bool copyFormulaIntoEvalBuff(word pos, word size) {
 
 //Copies a string or string formula to EVAL_BUFF for string processing.
 //	Returns false if a variable didn't exist.
-bool copyStringIntoEvalBuff(word pos, word size) {
+bool copyStringIntoEvalBuff(ibword pos, ibword size) {
 	char key[KEY_SIZE + 1];
 	char varPos = 0;
 	bool varMode = false;
@@ -158,7 +158,7 @@ bool copyStringIntoEvalBuff(word pos, word size) {
 					key[varPos++] = c;
 				} else if (!isAlphaNum(varMode) && varMode) {
 					key[varPos] = 0;
-					word addr = findNode(key);
+					ibword addr = findNode(key);
 					if (addr == undefined) return false;
 					if (key[0] == '$') {
 						EVAL_BUFF[EVAL_LEN++] = '#';
@@ -181,7 +181,7 @@ bool copyStringIntoEvalBuff(word pos, word size) {
 	}
 	if (varMode) {
 		key[varPos] = 0;
-		word addr = findNode(key);
+		ibword addr = findNode(key);
 		if (addr == undefined) return false;
 		if (key[0] == '$') {
 			EVAL_BUFF[EVAL_LEN++] = '#';
@@ -199,10 +199,10 @@ bool copyStringIntoEvalBuff(word pos, word size) {
 }
 
 //Verifies no syntax errors in formulas.
-bool verifyFormula(word pos, word size) {
+bool verifyFormula(ibword pos, ibword size) {
 	char balance = 0;
 	char c;
-	for (word i = 0; i < size; i++) {
+	for (ibword i = 0; i < size; i++) {
 		c = LINE_BUFF[pos + i];
 		if (c == '(')
 			balance++;
@@ -217,11 +217,11 @@ bool verifyFormula(word pos, word size) {
 }
 
 //Verifies no syntax errors in string formulas.
-bool verifyString(word pos, word size) {
+bool verifyString(ibword pos, ibword size) {
 	return true;
 	bool stringMode = false;
 	char c;
-	for (word i = 0; i < size; i++) {
+	for (ibword i = 0; i < size; i++) {
 		c = LINE_BUFF[pos];
 		if (!stringMode) {
 			if (c == '\"') {

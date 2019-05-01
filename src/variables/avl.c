@@ -159,7 +159,7 @@ bool isOperator(char c) {
 }
 
 //Create a new node.
-AVL_Node newNode(word address, word size, char *key, word left, word right) {
+AVL_Node newNode(ibword address, ibword size, char *key, ibword left, ibword right) {
 	AVL_Node n;
 	n.address = address;
 	n.size = size;
@@ -179,7 +179,7 @@ AVL_Node newNode(word address, word size, char *key, word left, word right) {
 }
 
 //Fetch a node from RAM.
-AVL_Node fetchNode(word pos) {
+AVL_Node fetchNode(ibword pos) {
 
 	char buff[sizeof(AVL_Node)];
 	for (char i = 0; i < sizeof(AVL_Node); i++) {
@@ -209,7 +209,7 @@ void storeNode(AVL_Node *n) {
 
 //Pushes a node into RAM.
 //	Returns the address it was stored at.
-word pushNode(AVL_Node *n) {
+ibword pushNode(AVL_Node *n) {
 	n->address = AVL_END;
 	AVL_END += sizeof(AVL_Node) + n->size;
 	char buff[sizeof(AVL_Node)];
@@ -486,7 +486,7 @@ int getNodeBalance(AVL_Node *node) {
 
 //Inserts a new node to a tree.
 //	Returns the address of the node.
-word insertNode(AVL_Node *node) {
+ibword insertNode(AVL_Node *node) {
 
 	//Just insert the node if there are no nodes.
 	if (AVL_END == 0) {
@@ -498,8 +498,8 @@ word insertNode(AVL_Node *node) {
 	AVL_Node root = fetchNode(AVL_ROOT);
 	AVL_Node unbalanced;
 	unbalanced.address = undefined;
-	word height = 0;
-	word return_val = undefined;
+	ibword height = 0;
+	ibword return_val = undefined;
 	
 	//Go to the bottom.
 	while (1) {
@@ -531,7 +531,7 @@ word insertNode(AVL_Node *node) {
 	//Go back up to the top.
 	AVL_Node pnode;
 	int balance, pbalance;
-	for (word i = 1; i <= height + 1; i++) {
+	for (ibword i = 1; i <= height + 1; i++) {
 		if (i + 1 > root.height) {
 			root.height = i + 1;
 			storeNode(&root);
@@ -570,7 +570,7 @@ word insertNode(AVL_Node *node) {
 }
 
 //Finds a node's address from a given key.
-word findNode(char *tkey) {
+ibword findNode(char *tkey) {
 	//Fix spacing for search.
 	char key[KEY_SIZE + 1];
 	for (char i = 0; i < KEY_SIZE; i++) {
@@ -589,7 +589,7 @@ word findNode(char *tkey) {
 	AVL_Node root = fetchNode(AVL_ROOT);
 	AVL_Node unbalanced;
 	unbalanced.address = undefined;
-	word height = 0;
+	ibword height = 0;
 	
 	//Go to the bottom.
 	while (1) {
@@ -628,7 +628,7 @@ void printNode(AVL_Node n) {
 	else printf("\tSize: %u\n", n.size);*/
 }
 
-void printTree(word pos) {
+void printTree(ibword pos) {
 	AVL_Node n = fetchNode(pos);
 	printNode(n);
 	if (n.left != undefined) printTree(n.left);
