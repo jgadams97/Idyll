@@ -55,11 +55,11 @@ if LHS comparator RHS then
 fi
 Valid comparators are:
 ```
-	>=	Greater than or equal to.
-	<=	Less than or equal to.
-	>	Greater than.
-	<	Less than.
-	!=	Not equal to.
+>=	Greater than or equal to.
+<=	Less than or equal to.
+>	Greater than.
+<	Less than.
+!=	Not equal to.
 ```
 Only "==" and "!=" are valid for string comparisons. String comparisons only apply to the first 8 characters of the string.
 
