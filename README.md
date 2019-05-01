@@ -66,7 +66,7 @@ Only "==" and "!=" are valid for string comparisons. String comparisons only app
 Some commands output values. These values can be redirected into a variable using the "=>" symbol.
 ```
 dim $name[20]
-read => $name
+$read => $name
 print "Hello, " + $name + "!"
 ```
 Scripts in their own file can be ran using the "run" command.
