@@ -62,12 +62,19 @@ if (compareIgnoreCase(command, "free")) {
 	//Verify number of arguments.
 	if (arg != 1)
 		return ERROR_ARGUMENT_COUNT;
-		
-	//No output? Just print it.
-	if (!hasArrow) {
-		printFloat(sizeRAM() - AVL_END);
-		printString(" bytes free.\n");
-		return 0;
+	
+	//Needs output.
+	if (hasArrow) {
+		if (!isAlphaNum(outputKey[0]))
+			return ERROR_INVALID_TYPE;
+		writeNum(outputAddress, sizeRAM() - AVL_END);
+	} else {
+		//No output? Just print it.
+		if (!hasArrow) {
+			printFloat(sizeRAM() - AVL_END);
+			printString(" bytes free.\n");
+			return 0;
+		}
 	}
 	
 	return 0;

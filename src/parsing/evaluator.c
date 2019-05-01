@@ -203,7 +203,7 @@ bool verifyFormula(word pos, word size) {
 	char balance = 0;
 	char c;
 	for (word i = 0; i < size; i++) {
-		c = LINE_BUFF[pos];
+		c = LINE_BUFF[pos + i];
 		if (c == '(')
 			balance++;
 		else if (c == ')')

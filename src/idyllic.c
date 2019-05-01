@@ -652,7 +652,8 @@ char evalCommand() {
 	if (hasArrow) {
 		//Remove arrow from arguments.
 		argsSize[arg - 1] = pos - argsStart[arg - 1] - 1;
-	
+		arg--;
+		
 		//Skip over whitespace.
 		pos += 2;
 		c = LINE_BUFF[pos++];
