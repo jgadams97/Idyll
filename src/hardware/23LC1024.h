@@ -84,42 +84,8 @@ void SRAM_INIT() {
 	SRAM_WRITE_MODE(0x00);
 }
 
-
 //Writes byte b to address a.
-/*void SRAM_WRITE(int a,  char b) {
-	a *= 8;
-	for (int i = 0; i < 8; i++) {
-		digitalWrite(PIN_CS, LOW);
-		SRAM_CLOCK_BYTE_OUT(0x02);
-		SRAM_CLOCK_BYTE_OUT( i + ((a & 0b10000000000000000) >> 16));
-		SRAM_CLOCK_BYTE_OUT( i + ((a & 0b01111111100000000) >>  8));
-		SRAM_CLOCK_BYTE_OUT( i + ((a & 0b00000000011111111) ));
-		SRAM_CLOCK_BYTE_OUT( (b & 0b10000000) ? 1 : 0);
-		b = b << 1;
-		digitalWrite(PIN_CS, HIGH);
-	}
-}
-
-//Reads byte from address a.
-char SRAM_READ(int a) {
-	char ret = 0;
-	a *= 8;
-	for (int i = 0; i < 8; i++) {
-		digitalWrite(PIN_CS, LOW);
-		SRAM_CLOCK_BYTE_OUT(0x03);
-		SRAM_CLOCK_BYTE_OUT( i + ((a & 0b10000000000000000) >> 16));
-		SRAM_CLOCK_BYTE_OUT( i + ((a & 0b01111111100000000) >>  8));
-		SRAM_CLOCK_BYTE_OUT( i + ((a & 0b00000000011111111)) );
-		char b = SRAM_CLOCK_BYTE_IN();
-		digitalWrite(PIN_CS, HIGH);
-		ret = (ret << 1) + b;
-	}
-	return ret;
-}*/
-
-
-//Writes byte b to address a.
-void SRAM_WRITE(int a,  char b) {
+void SRAM_WRITE(ibword a,  char b) {
 	digitalWrite(PIN_CS, LOW);
 	SRAM_CLOCK_BYTE_OUT(0x02);
 	SRAM_CLOCK_BYTE_OUT( (a & 0b10000000000000000) >> 16);
@@ -130,7 +96,7 @@ void SRAM_WRITE(int a,  char b) {
 }
 
 //Reads byte from address a.
-char SRAM_READ(int a) {
+char SRAM_READ(ibword a) {
 	digitalWrite(PIN_CS, LOW);
 	SRAM_CLOCK_BYTE_OUT(0x03);
 	SRAM_CLOCK_BYTE_OUT( (a & 0b10000000000000000) >> 16);

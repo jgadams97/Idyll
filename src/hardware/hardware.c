@@ -64,10 +64,6 @@ char readFile(ibword pos) {
 
 #endif
 
-#ifdef PASOCOM
-
-#endif
-
 #ifdef ATMEGA328P
 
 void writeChar(char c) {
@@ -116,30 +112,19 @@ void closeFile() {
 	OPEN_FILE.close();
 }*/
 
-char RAM[512];
 ibword sizeRAM() {
-	return 512;
+	return 125000;
 }
 
 //File RAM_FILE;
 //Read a byte from RAM.
 char readRAM(ibword pos) {
-	//RAM_FILE.seek(pos);
-	//return RAM_FILE.read();
-	//return SRAM_READ(pos);
-	return RAM[pos];
+	return SRAM_READ(pos);
 }
 
 //Write a byte to RAM. 
 void writeRAM(ibword pos, char b) {
-	/*char buff[1];
-	buff[0] = b;
-	RAM_FILE.seek(pos);
-	RAM_FILE.write(buff, 1);
-	RAM_FILE.flush();*/
-	//SRAM_WRITE(pos, b);
-	RAM[pos] = b;
-	
+	SRAM_WRITE(pos, b);
 }
 
 

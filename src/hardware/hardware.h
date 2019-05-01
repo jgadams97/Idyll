@@ -5,7 +5,12 @@
 typedef unsigned char bool;
 #endif
 #define undefined -1
-typedef unsigned int ibword;
+#ifdef DESKTOP
+typedef int ibword;
+#endif
+#ifdef ARDUINO
+typedef long ibword;
+#endif
 char readRAM(ibword pos);
 void writeRAM(ibword pos, char b);
 void writeChar(char c);
@@ -15,9 +20,7 @@ void openFile(char *fname);
 void closeFile();
 char readFile(ibword pos);
 #ifdef ATMEGA328P
-//#include "23LC1024.h"
-//#include <SD.h>
-//File OPEN_FILE;
+#include "23LC1024.h"
 #endif
 #include "hardware.c"
 
