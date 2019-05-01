@@ -35,7 +35,9 @@ Trying to store a string into a string variable larger than it was declared as w
 
 You cannot "dim" an address. Addresses are created like so:
 
+```
 @myAddress
+```
 The address automatically gets assigned its value, which depends on where it occurs in the file.
 
 Addresses can be jumped to using "goto @myAddress". This can be used for looping.
