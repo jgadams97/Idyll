@@ -1,4 +1,8 @@
-//Print command
+//Quit command.
+if (compareIgnoreCase(command, "quit")) {
+	return ERROR_HALTING;
+}
+
 if (compareIgnoreCase(command, "print")) {
 	//Verify number of arguments.
 	if (arg != 2)

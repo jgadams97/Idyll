@@ -397,17 +397,15 @@ char evalConditional() {
 		if (cond1 == '=' && cond2 == '=') {
 			if (strcmp(compA, compB) != 0)
 				return ERROR_CONDITIONAL_TRIGGERED;
-			return 0;
 		} else if (cond1 == '!' && cond2 == '=') {
 			if (strcmp(compA, compB) == 0)
 				return ERROR_CONDITIONAL_TRIGGERED;
-			return 0;
 		} else {
 			return ERROR_SYNTAX;
 		}
 	}
 	
-	return 0;
+	return ERROR_CONDITIONAL_UNTRIGGERED;
 	
 	
 }
@@ -822,6 +820,9 @@ void printError(char e) {
 		case ERROR_FILE_NOT_FOUND:
 			printString("File not found");
 			break;
+		default:
+			printString("This command cannot be executed in DIRECT mode");
+			break;
 	}
 	
 }
@@ -847,6 +848,11 @@ char eval(word pos) {
 		} else {
 			err = evalLine(pos, pos + size);
 		}
+		//Not an actual error.
+		if (err == ERROR_CONDITIONAL_UNTRIGGERED)
+			err = 0;
+		if (err == ERROR_HALTING)
+			break;
 		if (err != 0) {
 			//This error means something occurred
 			//	that requires changing the address.

@@ -15,6 +15,8 @@ void main() {
 		copyStringIntoLineBuff(userInput);
 		char e;
 		if ( (e = evalLine(0, 0)) != 0) {
+			if (e == ERROR_HALTING)
+				break;
 			printError(e);
 			printString(".\n");
 		}
