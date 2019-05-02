@@ -594,7 +594,7 @@ char evalCommand() {
 	
 	//Get end of command.
 	while (!isWS(c) && !isEOL(c)) {
-		if (!isAlpha(c))
+		if (!isAlpha(c) && c != '$')
 			return ERROR_SYNTAX;
 		if (commandPos == 10)
 			return ERROR_UNKNOWN_COMMAND;
