@@ -5,12 +5,12 @@
 #include <stdio.h>
 #define false 0
 #define true 1
-unsigned char RAM[1048576];
+unsigned char RAM[125000];
 FILE *OPEN_FILE;
 
 //Get size of RAM.
 ibword sizeRAM() {
-	return 1048576;
+	return 125000;
 }
 
 //Read a byte from RAM.
@@ -73,44 +73,6 @@ void writeChar(char c) {
 char readChar() {
 	return Serial.read();
 }
-
-/*//Read a byte from RAM.
-char readRAM(ibword pos) {
-	return SRAM_READ(pos);
-}
-
-//Write a byte to RAM. 
-void writeRAM(ibword pos, char b) {
-	SRAM_WRITE(pos, b);
-}
-void openFile(char *fname) {
-	OPEN_FILE = SD.open(fname);
-}
-
-char readFile(ibword pos) {
-	char c = 0;
-	if (!OPEN_FILE.seek(pos))
-		c = 0;
-	else
-		c = OPEN_FILE.read();
-	return c;
-}
-
-bool fileExists(char *fname) {
-	//Serial.println("EXISTENCE CHECK");
-	File file = SD.open(fname);
-	if (file) {
-		file.close();
-		return true;
-	} else {
-		return false;
-	}
-
-}
-void closeFile() {
-	//Serial.println("FILE CLOSED");
-	OPEN_FILE.close();
-}*/
 
 ibword sizeRAM() {
 	return 125000;
