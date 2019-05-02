@@ -2,7 +2,7 @@
 
 void main() {
 	char userInput[100];
-	printString("IdyllicBASIC v0.1\n");
+	printString("IdyllicBASIC v0.2\n");
 	while (1) {
 		printString("] ");
 		char pos = 0;

@@ -53,59 +53,56 @@ bool copyFormulaIntoEvalBuff(ibword pos, ibword size) {
 	EVAL_LEN = 0;
 	EVAL_BUFF[EVAL_LEN++] = '(';
 	for (char i = 0; i < size; i++) {
+		if (isWS(LINE_BUFF[pos + i])) continue;
 		pc = c;
-		char c = LINE_BUFF[pos + i];
-		if (!isWS(c)) {
-		
-			if ((isAlpha(c) || c == '@') && !varMode) { 
-				varMode = true;
-				varPos = 0;
-				key[varPos++] = c;
-			} else if (isAlphaNum(c) && varMode) {
-				key[varPos++] = c;
-			} else if (!isAlphaNum(varMode) && varMode) {
-				key[varPos] = 0;
-				ibword addr = findNode(key);
-				if (addr == undefined) return false;
-				if (key[0] == '@') appendAdr(readAdr(addr));
-				else appendNum(readNum(addr));
-				varMode = false;
-			}
-			
-			//Removes excessive parenthesis.
-			if (c == '(') {
-				fixerStack[fixerStackPos++] = EVAL_LEN;
-			} else if (c == ')') {
-				ibword fs = fixerStack[fixerStackPos - 1];
-				fixerStackPos--;
-				if (fs != -1) {
-					EVAL_BUFF[EVAL_LEN++] = '+';
-					EVAL_BUFF[EVAL_LEN++] = '0';
-				}
-			} else if (isOperator(c)) {
-				fixerStack[fixerStackPos - 1] = -1;
-			}
-			
-			if (!varMode) {
-				if (c == '-') {
-					if (pc == 0 || isOperator(pc) || pc == '(') {
-						EVAL_BUFF[EVAL_LEN++] = '(';
-						EVAL_BUFF[EVAL_LEN++] = '0';
-						EVAL_BUFF[EVAL_LEN++] = '-';
-						EVAL_BUFF[EVAL_LEN++] = '1';
-						EVAL_BUFF[EVAL_LEN++] = ')';
-						EVAL_BUFF[EVAL_LEN++] = '*';
-					} else {
-						EVAL_BUFF[EVAL_LEN++] = c;				
-					}
-				} else {
-					EVAL_BUFF[EVAL_LEN++] = c;
-				}
-				
-			}
-			
-			
+		c = LINE_BUFF[pos + i];
+		if ((isAlpha(c) || c == '@') && !varMode) { 
+			varMode = true;
+			varPos = 0;
+			key[varPos++] = c;
+		} else if (isAlphaNum(c) && varMode) {
+			key[varPos++] = c;
+		} else if (!isAlphaNum(varMode) && varMode) {
+			key[varPos] = 0;
+			ibword addr = findNode(key);
+			if (addr == undefined) return false;
+			if (key[0] == '@') appendAdr(readAdr(addr));
+			else appendNum(readNum(addr));
+			varMode = false;
 		}
+			
+		//Removes excessive parenthesis.
+		if (c == '(') {
+			fixerStack[fixerStackPos++] = EVAL_LEN;
+		} else if (c == ')') {
+			ibword fs = fixerStack[fixerStackPos - 1];
+			fixerStackPos--;
+			if (fs != -1) {
+				EVAL_BUFF[EVAL_LEN++] = '+';
+				EVAL_BUFF[EVAL_LEN++] = '0';
+			}
+		} else if (isOperator(c)) {
+			fixerStack[fixerStackPos - 1] = -1;
+		}
+			
+		if (!varMode) {
+			if (c == '-') {
+				if (pc == 0 || isOperator(pc) || pc == '(') {
+					EVAL_BUFF[EVAL_LEN++] = '(';
+					EVAL_BUFF[EVAL_LEN++] = '0';
+					EVAL_BUFF[EVAL_LEN++] = '-';
+					EVAL_BUFF[EVAL_LEN++] = '1';
+					EVAL_BUFF[EVAL_LEN++] = ')';
+					EVAL_BUFF[EVAL_LEN++] = '*';
+				} else {
+					EVAL_BUFF[EVAL_LEN++] = c;				
+				}
+			} else {
+				EVAL_BUFF[EVAL_LEN++] = c;
+			}
+				
+		}
+		
 	}
 	if (varMode) {
 		key[varPos] = 0;
@@ -131,7 +128,7 @@ bool copyFormulaIntoEvalBuff(ibword pos, ibword size) {
 		}
 	}
 	EVAL_BUFF[EVAL_LEN] = 0;
-	
+		
 	return true;
 }
 
@@ -202,15 +199,59 @@ bool copyStringIntoEvalBuff(ibword pos, ibword size) {
 bool verifyFormula(ibword pos, ibword size) {
 	char balance = 0;
 	char c;
+	char type = 'x';
+	char ptype = ' ';
 	for (ibword i = 0; i < size; i++) {
 		c = LINE_BUFF[pos + i];
-		if (c == '(')
+		if (isWS(c)) continue;
+		if (c == '(') {
 			balance++;
-		else if (c == ')')
+			ptype = type;
+			type = '(';
+		} else if (c == ')') {
 			balance--;
-		else if (!isAlphaNum(c) && !isOperator(c) && !isWS(c) && c != '@')
+			ptype = type;
+			type = ')';
+		} else if (!isAlphaNum(c) && !isOperator(c) && !isWS(c) && c != '@') {
 			return false;
+		}
+		if (isOperator(c)) {
+			ptype = type;
+			if (c == '-') type = '-';
+			else type = '+';
+		} else if (isAlphaNum(c) || c == '@') {
+			ptype = type;
+			if (c == '.') type = '.';
+			else type = '0';
+		}
+		
+		if (type == '+') {
+			if (ptype == '(' || ptype == 'x' || ptype == '+') {
+				return false;
+			}
+		} else if (type == '(') {
+			if (ptype == ')' || ptype == '0' || ptype == '.') {
+				return false;
+			}
+		} else if (type == ')') {
+			if (ptype == '(' || ptype == '+') {
+				return false;
+			}
+		} else if (type == '0') {
+			if (ptype == ')') {
+				return false;
+			}
+		} else if (type == '.') {
+			if (ptype == '.' || ptype == ')') {
+				return false;
+			}
+		}
 	}
+	
+	if (type == '+' || type == '(' || type == '-') {
+		return false;
+	}
+	
 	if (balance != 0)
 		return false;
 	return true;
@@ -218,16 +259,27 @@ bool verifyFormula(ibword pos, ibword size) {
 
 //Verifies no syntax errors in string formulas.
 bool verifyString(ibword pos, ibword size) {
-	return true;
 	bool stringMode = false;
-	char c;
+	char c = 'x';
+	char pc;
 	for (ibword i = 0; i < size; i++) {
-		c = LINE_BUFF[pos];
+		if (isWS(LINE_BUFF[pos + i])) continue;
+		pc = c;
+		c = LINE_BUFF[pos + i];
+		if (c == '\"' && pc == '\"') {
+			return false;
+		}
 		if (!stringMode) {
 			if (c == '\"') {
 				stringMode = true;
-			} else {
-				//if (!isAlphaNum(c) && 
+			} else if (c == '+' && pc == '+') {
+				return false;
+			} else if (!isAlphaNum(c) && c != '$' && c != '@' && c != '+') {
+				return false;
+			}
+		} else if (stringMode) {
+			if (c == '\"') {
+				stringMode = false;
 			}
 		}
 	}
