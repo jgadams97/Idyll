@@ -145,7 +145,8 @@ void evaluateFormulaOnce() {
 	} else if (oper == '*') {
 		output = LHS * RHS;
 	} else if (oper == '/') {
-		output = LHS / RHS;
+		if (RHS == 0) output = 0;
+		else output = LHS / RHS;
 	} else if (oper == '=') {
 		output = LHS == RHS;
 	} else if (oper == '>') {
