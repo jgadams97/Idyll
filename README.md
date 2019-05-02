@@ -1,4 +1,4 @@
-Idyll is a variant of BASIC that encapsulates memory management.
+IdyllicBASIC is a variant of BASIC that encapsulates memory management.
 
 This means two things: 1. Idyllic scripts can be executed from program memory without loading them into RAM. 2. Idyllic scripts can store its variables within external memory devices. This includes anything from an external RAM to even a hard disk drive or an SD card.
 
