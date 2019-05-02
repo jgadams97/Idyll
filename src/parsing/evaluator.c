@@ -198,12 +198,17 @@ bool copyStringIntoEvalBuff(ibword pos, ibword size) {
 //Verifies no syntax errors in formulas.
 bool verifyFormula(ibword pos, ibword size) {
 	char balance = 0;
-	char c;
+	char c, pc = 'x';
 	char type = 'x';
 	char ptype = ' ';
+	char ps = ' ';
 	for (ibword i = 0; i < size; i++) {
+		pc = c;
 		c = LINE_BUFF[pos + i];
-		if (isWS(c)) continue;
+		if (isWS(c)) {
+			ps = type;
+			continue;
+		}
 		if (c == '(') {
 			balance++;
 			ptype = type;
@@ -239,6 +244,9 @@ bool verifyFormula(ibword pos, ibword size) {
 			}
 		} else if (type == '0') {
 			if (ptype == ')') {
+				return false;
+			}
+			if (ps == '0' || ps == '.') {
 				return false;
 			}
 		} else if (type == '.') {
