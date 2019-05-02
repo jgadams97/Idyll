@@ -578,6 +578,9 @@ ibword findNode(char *tkey) {
 	}
 	for (char i = 0; i < KEY_SIZE; i++) {
 		if (tkey[i] == 0) break;
+		//Force nodes to be non-case sensitive.
+		if (tkey[i] >= 'a' && tkey[i] <= 'z')
+			tkey[i] -= 'a' - 'A';
 		key[i] = tkey[i];
 	}
 	key[KEY_SIZE] = 0;

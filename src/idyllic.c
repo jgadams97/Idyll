@@ -593,7 +593,9 @@ char evalCommand() {
 	argsStart[0] = pos;
 	
 	//Get end of command.
-	while (!isWS(c) && !isEOL(c) ) {
+	while (!isWS(c) && !isEOL(c)) {
+		if (!isAlpha(c))
+			return ERROR_SYNTAX;
 		if (commandPos == 10)
 			return ERROR_UNKNOWN_COMMAND;
 		command[commandPos++] = c;
