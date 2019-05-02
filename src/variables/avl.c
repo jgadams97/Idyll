@@ -649,7 +649,8 @@ bool verifyKey(char *key) {
 	if (!isAlpha(c)) return false;
 	c = key[p++];
 	while (c != 0) {
-		if (!isAlphaNum(c)) return false;
+		if (!isAlphaNum(c) || c == '.') 
+			return false;
 		c = key[p++];
 	}
 	if (p > KEY_SIZE) return false;
