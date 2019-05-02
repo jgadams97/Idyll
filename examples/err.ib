@@ -1,0 +1,17 @@
+clear
+dim tmp = 0
+dim pfib = 1
+dim fib = 1
+dim $out[100] = "1, 1"
+
+@loop
+	tmp = fib
+	fib = pfib + fib
+	pfib = tmp5
+	$out = $out + ", " + fib
+	
+if pfib <= 1000 then
+	goto @loop
+fi
+
+print $out

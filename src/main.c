@@ -1,6 +1,17 @@
 #include "idyllic.c"
 
-void main() {
+void main(int argc, char **args) {
+	if (argc == 2) {
+		if (!fileExists(args[1])) {
+			printf("File `%s` not found.\n", args[1]);
+			return;
+		} else {
+			openFile(args[1]);
+			eval(0);
+			closeFile();
+			return;
+		}
+	}
 	char userInput[100];
 	printString("IdyllicBASIC v0.2\n");
 	while (1) {

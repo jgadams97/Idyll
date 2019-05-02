@@ -121,7 +121,7 @@ char evalAssignment() {
 	if (isEOL(c)) return ERROR_SYNTAX;
 	
 	//Key doesn't exist.
-	if (!verifyKey(key)) return ERROR_SYNTAX;
+	if (!verifyKey(key)) return ERROR_INVALID_KEY;
 	
 	//Check if key exists.
 	ibword addr = findNode(key);
@@ -151,13 +151,13 @@ char evalAssignment() {
 		if (!verifyFormula(start, size))
 			return ERROR_SYNTAX;
 		if (!copyFormulaIntoEvalBuff(start, size))
-			return ERROR_SYNTAX;
+			return ERROR_KEY_NOT_FOUND;
 		writeNum(addr, evaluateFormula());
 	} else if (key[0] == '$') {
 		if (!verifyString(start, size))
 			return ERROR_SYNTAX;
 		if (!copyStringIntoEvalBuff(start, size))
-			return ERROR_SYNTAX;
+			return ERROR_KEY_NOT_FOUND;
 		ibword strSize = readStrSize(addr);
 		ibword strPos = 0;
 		char c = readCharFromEvalBuff();
@@ -832,8 +832,10 @@ char eval(ibword pos) {
 	ibword size;
 	char eof = 10;
 	ibword skipMode = 0;
+	ibword lineNum = 0;
 	
 	while (eof == 10) {
+		lineNum++;
 		size = copyFileIntoLineBuff(pos);
 		eof = readFile(pos + size - 1);
 		char err;
@@ -864,8 +866,8 @@ char eval(ibword pos) {
 				skipMode = 1;
 			} else {
 				printError(err);
-				printString(" at position ");
-				printInt(pos);
+				printString(" at line ");
+				printInt(lineNum);
 				printString(".\n");
 				return err;
 			}
