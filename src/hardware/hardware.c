@@ -81,12 +81,12 @@ ibword sizeRAM() {
 //File RAM_FILE;
 //Read a byte from RAM.
 char readRAM(ibword pos) {
-	return SRAM_READ(pos);
+	return sramRead(pos);
 }
 
 //Write a byte to RAM. 
 void writeRAM(ibword pos, char b) {
-	SRAM_WRITE(pos, b);
+	sramWrite(pos, b);
 }
 
 
