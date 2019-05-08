@@ -80,3 +80,51 @@ Scripts in their own file can be ran using the "run" command.
 ```
 run "fibonacci.ib"
 ```
+
+If a number variable is declared with a size, it will become an array.
+```
+dim x[10]
+x[5] = 12
+x[2] = 8
+print x[5] + x[2]
+```
+
+Array indices can either be numbers or a variable.
+
+```
+;Declare the array.
+dim myArray[10]
+
+;Fill the array.
+dim i = 0
+@loop1
+	myArray[i] = i * 2
+	i = i + 1
+if i < 10 then
+	goto @loop1
+fi
+
+;Print out the numbers.
+i = 0
+@loop2
+	print myArray[i]
+	i = i + 1
+if i < 10 then
+	goto @loop2
+fi
+```
+
+Note that strings can also be referenced using an index. This will return that single character at the given index.
+
+```
+dim $str[10] = "Hello!"
+print $str[1]
+```
+
+You may also assign that character a new value. 
+
+```
+dim $str[10] = "Hello!"
+$str[2] = "n"
+print $str
+```
