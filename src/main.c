@@ -2,18 +2,18 @@
 
 void main(int argc, char **args) {
 	if (argc == 2) {
-		if (!fileExists(args[1])) {
+		if (!fileExistsOnDevice(args[1])) {
 			printf("File `%s` not found.\n", args[1]);
 			return;
 		} else {
-			openFile(args[1]);
+			openFileOnDevice(args[1]);
 			eval(0);
-			closeFile();
+			closeFileOnDevice();
 			return;
 		}
 	}
 	char userInput[100];
-	printString("IdyllicBASIC v0.2\n");
+	printString("IdyllicBASIC v0.3\n");
 	while (1) {
 		printString("] ");
 		char pos = 0;

@@ -1,22 +1,13 @@
 #include "parsing/evaluator.h"
 char eval(ibword pos);
-/*
-dim x
-x = 0
-@loop
-	x = x + 1
-	print x
-goto @loop
-
-dim $bob[10]
-$bob = "hello"
-print $bob
-
-*/
+ibword PROGRAM_LOAD_ADDR;
+char PROGRAM_IN_RAM;
+/*842
+41
+34*/
 
 //Returns -1 if line is too long.
 //	Otherwise returns offset.
-
 void copyStringIntoLineBuff(char *s) {
 	ibword i = 0;
 	char c = s[0];
@@ -31,15 +22,13 @@ void copyStringIntoLineBuff(char *s) {
 
 ibword copyFileIntoLineBuff(ibword pos) {
 	ibword i = 0;
-	char c = readFile(pos);
+	char c = PROGRAM_IN_RAM ? readRAM(pos) : readFileOnDevice(pos);
 	while (!isEOL(c)) {
 		LINE_BUFF[i++] = c;
 		pos += 1;
 		if (i == LINE_BUFF_MAX)
 			return -1;
-			
-		c = readFile(pos);
-		
+		c = PROGRAM_IN_RAM ? readRAM(pos) : readFileOnDevice(pos);
 	}
 	LINE_BUFF[i] = 0;
 	return i + 1;
@@ -129,8 +118,53 @@ char evalAssignment() {
 		return ERROR_KEY_NOT_FOUND;
 		
 	//Skip to equal sign.
+	char isArray = 0;
 	while (c != '=' && !isEOL(c)) {
+		if (c == '[') {
+			isArray = 1;
+			break;
+		}
 		c = LINE_BUFF[++pos];
+	}
+	
+	//Fetch array index.
+	ibword index;
+	if (isArray) {
+		char numBuff[11];
+		char numBuffPos = 0;
+		char numIsVar = 0;
+		char isOnlyNum = 1;
+		c = LINE_BUFF[++pos];
+		while (c != ']') {
+			if (isEOL(c))
+				return ERROR_SYNTAX;
+			if (isAlpha(c))
+				numIsVar = 1;
+			if (!isNum(c) && !isWS(c))
+				isOnlyNum = 0;
+			if (!isWS(c))
+				numBuff[numBuffPos++] = c;
+			c = LINE_BUFF[++pos];
+		}
+		numBuff[numBuffPos] = 0;
+		if (numIsVar) {
+			if (!verifyKey(numBuff))
+				return ERROR_SYNTAX;
+			ibword addrIndex = findNode(numBuff);
+			if (addrIndex == undefined)
+				return ERROR_KEY_NOT_FOUND;
+			index = (int)readNum(addrIndex);
+		} else {
+			if (isOnlyNum)
+				index = atoi(numBuff);
+			else
+				return ERROR_SYNTAX;
+		}
+		
+		//Skip to equal sign.
+		while (c != '=' && !isEOL(c)) {
+			c = LINE_BUFF[++pos];
+		}
 	}
 	
 	//Syntax error.
@@ -150,25 +184,44 @@ char evalAssignment() {
 	if (isAlpha(key[0])) {
 		if (!verifyFormula(start, size))
 			return ERROR_SYNTAX;
-		if (!copyFormulaIntoEvalBuff(start, size))
-			return ERROR_KEY_NOT_FOUND;
-		writeNum(addr, evaluateFormula());
+		char err = copyFormulaIntoEvalBuff(start, size);
+		if (err != 0) return err;
+		if (isArray) {
+			if (index < 0 || index >= readArrSize(addr))
+				return ERROR_OUT_OF_BOUNDS;
+			writeArr(addr, index, evaluateFormula());
+		} else
+			writeNum(addr, evaluateFormula());
 	} else if (key[0] == '$') {
 		if (!verifyString(start, size))
 			return ERROR_SYNTAX;
-		if (!copyStringIntoEvalBuff(start, size))
-			return ERROR_KEY_NOT_FOUND;
+		char err = copyStringIntoEvalBuff(start, size);
+		if (err != 0) return err;
 		ibword strSize = readStrSize(addr);
 		ibword strPos = 0;
 		char c = readCharFromEvalBuff();
-		writeStr(addr, strPos++, c);
-		while (c = readCharFromEvalBuff()) {
-			if (strPos == strSize)
+		if (isArray) {
+			if (index < 0 || index >= readStrSize(addr))
 				return ERROR_OUT_OF_BOUNDS;
-			writeStr(addr, strPos++, c);
-		}
-		if (strPos != strSize) {
-			writeStr(addr, strPos, 0);
+			writeStr(addr, index, c);
+			//Reset the buffer.
+			EVAL_ADR = undefined;
+			readCharFromEvalBuff();
+		} else {
+			writeRAM(strPos + AVL_END, c);
+			strPos++;
+			while (c = readCharFromEvalBuff()) {
+				if (strPos == strSize)
+					return ERROR_OUT_OF_BOUNDS;
+				writeRAM(strPos + AVL_END, c);
+				strPos++;
+			}
+			for (int i = 0; i < strPos; i++) {
+				writeStr(addr, i, readRAM(i + AVL_END));
+			}
+			if (strPos != strSize) {
+				writeStr(addr, strPos, 0);
+			}
 		}
 	} else {
 		//Syntax error.
@@ -221,6 +274,7 @@ char evalConditional() {
 	char cond2 = ' ';
 	char c;
 	char pos = 0;
+	char err;
 	
 	//Skip over white space.
 	c = LINE_BUFF[pos];
@@ -331,13 +385,13 @@ char evalConditional() {
 		float lhs, rhs;
 		if (!verifyFormula(lhsStart, lhsSize))
 			return ERROR_SYNTAX;
-		if (!copyFormulaIntoEvalBuff(lhsStart, lhsSize))
-			return ERROR_SYNTAX;
+		err = copyFormulaIntoEvalBuff(lhsStart, lhsSize);
+		if (err != 0) return err;
 		lhs = evaluateFormula();
 		if (!verifyFormula(rhsStart, rhsSize))
 			return ERROR_SYNTAX;
-		if (!copyFormulaIntoEvalBuff(rhsStart, rhsSize))
-			return ERROR_SYNTAX;
+		err = copyFormulaIntoEvalBuff(rhsStart, rhsSize);
+		if (err != 0) return err;
 		rhs = evaluateFormula();
 		//Check the conditions.
 		if (cond1 == '>' && cond2 == ' ') {
@@ -372,8 +426,8 @@ char evalConditional() {
 		//Load string A.
 		if (!verifyString(lhsStart, lhsSize))
 			return ERROR_SYNTAX;
-		if (!copyStringIntoEvalBuff(lhsStart, lhsSize))
-			return ERROR_SYNTAX;	
+		err = copyStringIntoEvalBuff(lhsStart, lhsSize);
+		if (err != 0) return err;	
 		while (c = readCharFromEvalBuff()) {
 			compA[compPosA++] = c;
 			if (compPosA == compSize)
@@ -384,8 +438,8 @@ char evalConditional() {
 		//Load string B.
 		if (!verifyString(rhsStart, rhsSize))
 			return ERROR_SYNTAX;
-		if (!copyStringIntoEvalBuff(rhsStart, rhsSize))
-			return ERROR_SYNTAX;	
+		err = copyStringIntoEvalBuff(rhsStart, rhsSize);
+		if (err != 0) return err;
 		while (c = readCharFromEvalBuff()) {
 			compB[compPosB++] = c;
 			if (compPosB == compSize)
@@ -435,7 +489,7 @@ char evalDeclaration() {
 	c = LINE_BUFF[pos];
 	if (!isWS(c) || isEOL(c))
 		return ERROR_SYNTAX;
-		
+	
 	//Skip over white space.
 	while (isWS(c) && !isEOL(c)) {
 		c = LINE_BUFF[++pos];
@@ -468,15 +522,18 @@ char evalDeclaration() {
 	if (findNode(key) != undefined)
 		return ERROR_KEY_EXISTS;
 	
-	//Check to see variable type.
-	if (key[0] == '$') {
-		//Syntax error.
-		char numBuff[11];
-		char numPos = 0;
-		ibword size = 0;
-		if (c != '[')
-			return ERROR_SYNTAX;
-			
+	//Syntax error.
+	char numBuff[11];
+	char numPos = 0;
+	char hasArray = 0;
+	ibword size = 0;
+	ibword arrayStart = pos;
+	ibword arrayEnd = pos;
+	
+	//Handle array.
+	if (c == '[') {
+		hasArray = 1;
+		
 		//Read in size.
 		c = LINE_BUFF[++pos];
 		while (isNum(c) && !isEOL(c)) {
@@ -485,6 +542,7 @@ char evalDeclaration() {
 		}
 		numBuff[numPos] = 0;
 		size = atoi(numBuff);
+		arrayEnd = pos;
 		
 		//Syntax error.
 		if (c != ']')
@@ -507,8 +565,11 @@ char evalDeclaration() {
 			return ERROR_STRING_TOO_LARGE;
 			
 		//Create the variable.
-		dimStr(key, size); 
-
+		if (key[0] == '$')
+			dimStr(key, size);
+		else
+			dimArr(key, size);
+			
 	} else {
 		//Skip over white space.
 		while (isWS(c) && !isEOL(c)) {
@@ -523,12 +584,14 @@ char evalDeclaration() {
 		
 		//Create the variable.
 		dimNum(key, 0);
-		
-
 	}
 	
 	
 	if (containsAssignment) {
+		//Remove brackets.
+		for (ibword i = arrayStart; i < arrayEnd; i++)
+			LINE_BUFF[i] = ' ';
+
 		//Skip over white space;
 		pos = 0;
 		c = LINE_BUFF[pos++];
@@ -652,7 +715,6 @@ char evalCommand() {
 	if (hasArrow) {
 		//Remove arrow from arguments.
 		argsSize[arg - 1] = pos - argsStart[arg - 1] - 1;
-		arg--;
 		
 		//Skip over whitespace.
 		pos += 2;
@@ -706,14 +768,13 @@ char identifyLineType() {
 	bool isDeclaration = true;
 	bool isConditional = true;
 	bool isUnconditional = true;
-	bool isComment = true;
 	char c = LINE_BUFF[pos];
 	while (isWS(c) && !isEOL(c)) {
 		c = LINE_BUFF[++pos];
 	}
 	if (isEOL(c)) return TYPE_EMPTY;
 	if (c == '@') return TYPE_REFERENCE;
-	if (c != '/') isComment = false;
+	if (c == ';') return TYPE_COMMENT;
 	if ( (!isAlpha(c)) && c != '$' )
 		return TYPE_COMMAND;
 	if (c != 'D' && c != 'd')
@@ -723,9 +784,6 @@ char identifyLineType() {
 	if (c != 'f' && c != 'f')
 		isUnconditional = false;
 	c = LINE_BUFF[++pos];
-	if (c != '/') isComment = false;
-	if (isComment)
-		return TYPE_COMMENT;
 	if (c != 'I' && c != 'i')
 		isDeclaration = false;
 	if (c != 'F' && c != 'f')
@@ -753,7 +811,7 @@ char identifyLineType() {
 		c = LINE_BUFF[++pos];
 	}
 	if (isEOL(c)) return TYPE_COMMAND;
-	if (c == '=') {
+	if (c == '=' || c == '[') {
 		c = LINE_BUFF[++pos];
 		if (c != '>') return TYPE_ASSIGNMENT;
 	}
@@ -796,10 +854,10 @@ void printError(char e) {
 			printString("Invalid variable name");
 			break;
 		case 4:
-			printString("Variable already exists");
+			printString("Variable exists");
 			break;
 		case ERROR_OUT_OF_BOUNDS:
-			printString("String out of bounds");
+			printString("Out of bounds");
 			break;
 		case 6:
 			printString("Invalid type");
@@ -814,7 +872,7 @@ void printError(char e) {
 			printString("Missing THEN");
 			break;
 		case ERROR_STRING_TOO_LARGE:
-			printString("String declaration is too large");
+			printString("String is too large");
 			break;
 		case ERROR_UNKNOWN_COMMAND:
 			printString("Unknown command");
@@ -839,7 +897,7 @@ char eval(ibword pos) {
 	while (eof == 10) {
 		lineNum++;
 		size = copyFileIntoLineBuff(pos);
-		eof = readFile(pos + size - 1);
+		eof = PROGRAM_IN_RAM ? readRAM(pos+size-1) : readFileOnDevice(pos+size-1);
 		char err;
 		if (skipMode > 0) {
 			char type = identifyLineType();

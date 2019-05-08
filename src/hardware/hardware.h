@@ -14,13 +14,16 @@ typedef long ibword;
 char readRAM(ibword pos);
 void writeRAM(ibword pos, char b);
 void writeChar(char c);
+void waitForInput();
 char readChar();
-bool fileExists(char *fname);
-void openFile(char *fname);
-void closeFile();
-char readFile(ibword pos);
+bool fileExistsOnDevice(char *fname);
+void openFileOnDevice(char *fname);
+void closeFileOnDevice();
+char readFileOnDevice(ibword pos);
 #ifdef ATMEGA328P
 #include "23LC1024.h"
+#include "LCD2004.h"
+#include "file/file.h"
 #endif
 #include "hardware.c"
 

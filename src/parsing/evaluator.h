@@ -52,11 +52,11 @@ void appendAdr(ibword num);
 
 //Copies a numeric formula to EVAL_BUFF for numeric processing.
 //	Returns false if a variable didn't exist.
-bool copyFormulaIntoEvalBuff();
+char copyFormulaIntoEvalBuff();
 
 //Copies a string or string formula to EVAL_BUFF for string processing.
 //	Returns false if a variable didn't exist.
-bool copyStringIntoEvalBuff();
+char copyStringIntoEvalBuff();
 
 //If EVAL_BUFF contains a string formula, use this to read
 //	a character from it. Characters are shifted out of it.

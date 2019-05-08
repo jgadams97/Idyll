@@ -10,16 +10,16 @@ if (compareIgnoreCase(command, "print")) {
 	if (getExprType(argsStart[1], argsSize[1]) == TYPE_NUM) {
 		if (!verifyFormula(argsStart[1], argsSize[1]))
 			return ERROR_SYNTAX;
-		if (!copyFormulaIntoEvalBuff(argsStart[1], argsSize[1]))
-			return ERROR_KEY_NOT_FOUND;
+		char err = copyFormulaIntoEvalBuff(argsStart[1], argsSize[1]);
+		if (err != 0) return err;
 		float ans = evaluateFormula();
 		printFloat(ans);
 		writeChar('\n');
 	} else {
 		if (!verifyString(argsStart[1], argsSize[1]))
 			return ERROR_SYNTAX;
-		if (!copyStringIntoEvalBuff(argsStart[1], argsSize[1]))
-			return ERROR_KEY_NOT_FOUND;
+		char err = copyStringIntoEvalBuff(argsStart[1], argsSize[1]);
+		if (err != 0) return err;
 		char c;
 		bool isEscape = false;
 		while (c = readCharFromEvalBuff()) {
@@ -50,8 +50,8 @@ if (compareIgnoreCase(command, "goto")) {
 	if (getExprType(argsStart[1], argsSize[1]) == TYPE_NUM) {
 		if (!verifyFormula(argsStart[1], argsSize[1]))
 			return ERROR_SYNTAX;
-		if (!copyFormulaIntoEvalBuff(argsStart[1], argsSize[1]))
-			return ERROR_KEY_NOT_FOUND;
+		char err = copyFormulaIntoEvalBuff(argsStart[1], argsSize[1]);
+		if (err != 0) return err;
 		return ERROR_CHANGE_ADDRESS;
 	} else {
 		return ERROR_INVALID_TYPE;
@@ -115,17 +115,54 @@ if (compareIgnoreCase(command, "$read")) {
 
 //Runs a file.
 if (compareIgnoreCase(command, "run")) {
+	if (arg != 2 && arg != 1)
+		return ERROR_ARGUMENT_COUNT;
+	
+	if (arg == 2) {
+		if (getExprType(argsStart[1], argsSize[1]) != TYPE_STR)
+			return ERROR_INVALID_TYPE;
+		char fileName[20];
+		char fPos = 0;
+		if (!verifyString(argsStart[1], argsSize[1]))
+			return ERROR_SYNTAX;
+		char err = copyStringIntoEvalBuff(argsStart[1], argsSize[1]);
+		if (err != 0) return err;
+		char c;
+		while (c = readCharFromEvalBuff()) {
+			if (fPos == 19)
+				return ERROR_INVALID_OPTION;
+			fileName[fPos++] = c;
+		}
+		fileName[fPos] = 0;
+		
+		if (!fileExistsOnDevice(fileName))
+			return ERROR_FILE_NOT_FOUND;
+
+		openFileOnDevice(fileName);
+		PROGRAM_IN_RAM = 0;
+		eval(0);
+		closeFileOnDevice();
+	} else {
+		PROGRAM_IN_RAM = 1;
+		eval(PROGRAM_LOAD_ADDR);
+	}
+	return 0;
+}
+
+//Loads a file into RAM.
+if (compareIgnoreCase(command, "load")) {
+
 	if (arg != 2)
 		return ERROR_ARGUMENT_COUNT;
-	if (getExprType(argsStart[1], argsSize[1]) != TYPE_STR)
-		return ERROR_INVALID_TYPE;
-	
+		
 	char fileName[20];
 	char fPos = 0;
+	if (getExprType(argsStart[1], argsSize[1]) != TYPE_STR)
+		return ERROR_INVALID_TYPE;
 	if (!verifyString(argsStart[1], argsSize[1]))
 		return ERROR_SYNTAX;
-	if (!copyStringIntoEvalBuff(argsStart[1], argsSize[1]))
-		return ERROR_KEY_NOT_FOUND;
+	char err = copyStringIntoEvalBuff(argsStart[1], argsSize[1]);
+	if (err != 0) return err;
 	char c;
 	while (c = readCharFromEvalBuff()) {
 		if (fPos == 19)
@@ -134,12 +171,23 @@ if (compareIgnoreCase(command, "run")) {
 	}
 	fileName[fPos] = 0;
 	
-	if (!fileExists(fileName))
+	if (!fileExistsOnDevice(fileName))
 		return ERROR_FILE_NOT_FOUND;
-		
-	openFile(fileName);
-	eval(0);
-	closeFile();
+	
+	openFileOnDevice(fileName);
+	ibword s = sizeOfFileOnDevice();
+	PROGRAM_LOAD_ADDR = sizeRAM() - s - 1;
+	printString("Loading ");
+	printInt(s + 1);
+	printString(" bytes...\n");
+	for (ibword i = 0; i < s; i++) {
+		char rc = readFileOnDevice(i);
+		writeRAM(PROGRAM_LOAD_ADDR + i, rc);
+		//lcdPutChar(rc);
+	}
+	writeRAM(PROGRAM_LOAD_ADDR + s, 0);
+	printString("Done.\n");
+	closeFileOnDevice();
 	
 	return 0;
 }
@@ -153,96 +201,71 @@ if (compareIgnoreCase(command, "clear")) {
 	return 0;
 }
 
-//Gets character at index.
-if (compareIgnoreCase(command, "$charat")) {
-	if (arg != 3)
+
+
+//Peeks at the RAM.
+if (compareIgnoreCase(command, "peek")) {
+
+	if (arg != 2)
 		return ERROR_ARGUMENT_COUNT;
-	if (!hasArrow)
-		return 0;	
-	if (getExprType(argsStart[1], argsSize[1]) != TYPE_STR)
+	
+	if (getExprType(argsStart[1], argsSize[1]) != TYPE_NUM)
 		return ERROR_INVALID_TYPE;
-	if (getExprType(argsStart[2], argsSize[2]) != TYPE_NUM)
-		return ERROR_INVALID_TYPE;
-	if (!verifyFormula(argsStart[2], argsSize[2]))
+	if (!verifyFormula(argsStart[1], argsSize[1]))
 		return ERROR_SYNTAX;
-	if (!copyFormulaIntoEvalBuff(argsStart[2], argsSize[2]))
-		return ERROR_KEY_NOT_FOUND;
-	if (outputKey[0] != '$')
-		return ERROR_INVALID_TYPE;
-		
-	ibword index = (ibword)evaluateFormula();
-	
-	char key[KEY_SIZE + 1];
-	char i;
-	for (i = 0; i < argsSize[1]; i++) {
-		key[i] = LINE_BUFF[argsStart[1] + i];
-	}
-	key[i] = 0;
-	
-	if (key[0] != '$') 
-		return ERROR_INVALID_TYPE;
-	if (!verifyKey(key))
-		return ERROR_INVALID_KEY;
-	ibword addr = findNode(key);
-	if (addr == undefined)
-		return ERROR_KEY_NOT_FOUND;
-	
-	ibword size_a = readStrSize(addr);
-	ibword size_b = readStrSize(outputAddress);
-	
-	if (index >= size_a)
+	char err = copyFormulaIntoEvalBuff(argsStart[1], argsSize[1]);
+	if (err != 0) return err;
+	if (pos < 0 || pos >= sizeRAM())
 		return ERROR_OUT_OF_BOUNDS;
-	
-	if (size_b == 1) {
-		writeStr(outputAddress, 0, readStr(addr, index));
-	} else if (size_b > 1) {
-		writeStr(outputAddress, 0, readStr(addr, index));
-		writeStr(outputAddress, 1, 0);
+	ibword pos = (ibword)evaluateFormula();
+	/*float num;
+	char *ptr = (char*)(&num);
+	for (int i = 0; i < sizeof(float); i++)
+		ptr[i] = readRAM(pos + i);*/
+	if (hasArrow) {
+		if (!isAlphaNum(outputKey[0]))
+			return ERROR_INVALID_TYPE;
+		writeNum(outputAddress, readRAM(pos));
 	} else {
-		return ERROR_OUT_OF_BOUNDS;
+		printFloat(readRAM(pos));
+		putchar('\n');
 	}
-	
 	return 0;
 }
 
-//Gets character at index.
-if (compareIgnoreCase(command, "charcodeat")) {
+//Writes to the RAM.
+if (compareIgnoreCase(command, "poke")) {
+	char err;
 	if (arg != 3)
 		return ERROR_ARGUMENT_COUNT;
-	if (!hasArrow)
-		return 0;	
-	if (getExprType(argsStart[1], argsSize[1]) != TYPE_STR)
+	
+	ibword a;
+	if (getExprType(argsStart[1], argsSize[1]) != TYPE_NUM)
 		return ERROR_INVALID_TYPE;
+	if (!verifyFormula(argsStart[1], argsSize[1]))
+		return ERROR_SYNTAX;
+	err = copyFormulaIntoEvalBuff(argsStart[1], argsSize[1]);
+	if (err != 0) return err;
+	a = (ibword)evaluateFormula();
+	
+	//float b;
+	char b;
 	if (getExprType(argsStart[2], argsSize[2]) != TYPE_NUM)
 		return ERROR_INVALID_TYPE;
 	if (!verifyFormula(argsStart[2], argsSize[2]))
 		return ERROR_SYNTAX;
-	if (!copyFormulaIntoEvalBuff(argsStart[2], argsSize[2]))
-		return ERROR_KEY_NOT_FOUND;
-	if (outputKey[0] == '$' || outputKey[0] == '@')
-		return ERROR_INVALID_TYPE;
-		
-	ibword index = (ibword)evaluateFormula();
+	err = copyFormulaIntoEvalBuff(argsStart[2], argsSize[2]);
+	if (err != 0) return err;
+	b = (char)evaluateFormula();
 	
-	char key[KEY_SIZE + 1];
-	char i;
-	for (i = 0; i < argsSize[1]; i++) {
-		key[i] = LINE_BUFF[argsStart[1] + i];
-	}
-	key[i] = 0;
-	
-	if (key[0] != '$') 
-		return ERROR_INVALID_TYPE;
-	if (!verifyKey(key))
-		return ERROR_INVALID_KEY;
-	ibword addr = findNode(key);
-	if (addr == undefined)
-		return ERROR_KEY_NOT_FOUND;
-	
-	ibword size_a = readStrSize(addr);
-	if (index >= size_a)
+	if (a < AVL_END || a >= sizeRAM()/* - sizeof(float)*/)
 		return ERROR_OUT_OF_BOUNDS;
 	
-	writeNum(outputAddress, readStr(addr, index));
+	/*char *ptr = (char*)(&b);
+	for (int i = 0; i < sizeof(float); i++)
+		writeRAM(a + i, ptr[i]);*/
+	writeRAM(a, b);
 	return 0;
 }
+
+

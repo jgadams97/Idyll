@@ -1,0 +1,20 @@
+;Declare the array.
+dim myArray[10]
+
+;Fill the array.
+dim i = 0
+@loop1
+	myArray[i] = i * 2
+	i = i + 1
+if i < 10 then
+	goto @loop1
+fi
+
+;Print out the numbers.
+i = 0
+@loop2
+	print myArray[i]
+	i = i + 1
+if i < 10 then
+	goto @loop2
+fi

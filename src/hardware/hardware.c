@@ -36,7 +36,7 @@ char readChar() {
 }
 
 //Check if a file exists.
-bool fileExists(char *fname) {
+bool fileExistsOnDevice(char *fname) {
 	FILE *file = fopen(fname, "r");
 	if (file == NULL) {
 		return false;
@@ -47,19 +47,24 @@ bool fileExists(char *fname) {
 }
 
 //Open a file.
-void openFile(char *fname) {
+void openFileOnDevice(char *fname) {
 	OPEN_FILE = fopen(fname, "r");
 }
 
 //Closes a file.
-void closeFile() {
+void closeFileOnDevice() {
 	fclose(OPEN_FILE);
 }
 
 //Read character from file at address.
-char readFile(ibword pos) {
+char readFileOnDevice(ibword pos) {
 	fseek(OPEN_FILE, pos, SEEK_SET);
 	return (char)fgetc(OPEN_FILE);
+}
+
+ibword sizeOfFileOnDevice() {
+	fseek(OPEN_FILE, 0L, SEEK_END);
+	return ftell(OPEN_FILE);
 }
 
 #endif
@@ -67,7 +72,8 @@ char readFile(ibword pos) {
 #ifdef ATMEGA328P
 
 void writeChar(char c) {
-	Serial.print(c);
+	lcdPutChar(c);
+	//Serial.print(c);
 }
 
 char readChar() {
@@ -89,20 +95,34 @@ void writeRAM(ibword pos, char b) {
 	sramWrite(pos, b);
 }
 
+File OPEN_FILE;
 
-//const char myFile[] = "clear\ndim tmp = 0\ndim pfib = 1\ndim fib = 1\ndim $out[100] = \"1, 1\"\n@loop\n	tmp = fib\n	fib = pfib + fib\n	pfib = tmp\n	$out = $out + \", \" + fib\n\n	\nif pfib <= 1000 then\n	goto @loop\nfi\n\nprint $out";
-
-void openFile(char *fname) {}
-
-char readFile(ibword pos) {
+//Check if a file exists.
+bool fileExistsOnDevice(char *fname) {
+	OPEN_FILE = openFile(NULL, fname);
+	if (OPEN_FILE.status == 0) return 1;
 	return 0;
 }
 
-bool fileExists(char *fname) {
-	return false;
+//Open a file.
+void openFileOnDevice(char *fname) {
+	OPEN_FILE = openFile(NULL, fname);
 }
-void closeFile() {}
 
+//Closes a file.
+void closeFileOnDevice() {}
 
+//Read character from file at address.
+ibword FILE_PPOS = -1;
+char readFileOnDevice(ibword pos) {
+	if (FILE_PPOS != pos - 1 && pos != 0)
+		seekFile(&OPEN_FILE, pos);
+	FILE_PPOS = pos;
+	return readFile(&OPEN_FILE);
+}
+
+ibword sizeOfFileOnDevice() {
+	return OPEN_FILE.size;
+}
 
 #endif

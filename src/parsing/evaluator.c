@@ -40,8 +40,7 @@ void appendAdr(ibword num) {
 
 
 //Copies a numeric formula to EVAL_BUFF for numeric processing.
-//	0 No Error.
-bool copyFormulaIntoEvalBuff(ibword pos, ibword size) {
+char copyFormulaIntoEvalBuff(ibword pos, ibword size) {
 
 	short fixerStack[20];
 	char fixerStackPos = 0;
@@ -65,9 +64,51 @@ bool copyFormulaIntoEvalBuff(ibword pos, ibword size) {
 		} else if (!isAlphaNum(varMode) && varMode) {
 			key[varPos] = 0;
 			ibword addr = findNode(key);
-			if (addr == undefined) return false;
+			if (addr == undefined) return ERROR_KEY_NOT_FOUND;
 			if (key[0] == '@') appendAdr(readAdr(addr));
-			else appendNum(readNum(addr));
+			else if (LINE_BUFF[pos + i] == '[') {
+				ibword index;
+				i += 1;
+				char numBuffPos = 0;
+				char numIsVar = 0;
+				char isOnlyNum = 1;
+				char numBuff[20];
+				char cc = ' ';
+				for (; cc != ']'; i++) {
+					if (i == size) return 0;
+					if (isAlpha(cc))
+						numIsVar = 1;
+					if (!isNum(cc) && !isWS(cc))
+						isOnlyNum = 0;
+					if (!isWS(cc))
+						numBuff[numBuffPos++] = cc;
+					cc = LINE_BUFF[pos + i];
+				}
+				numBuff[numBuffPos] = 0;
+				if (numIsVar) {
+					if (!verifyKey(numBuff))
+						return ERROR_INVALID_KEY;
+					ibword addrIndex = findNode(numBuff);
+					if (addrIndex == undefined)
+						return ERROR_KEY_NOT_FOUND;
+					index = (int)readNum(addrIndex);
+				} else {
+					if (isOnlyNum)
+						index = atoi(numBuff);
+					else
+						return ERROR_SYNTAX;
+				}
+
+				if (index < 0 || index >= readArrSize(addr))
+					return ERROR_OUT_OF_BOUNDS;
+					
+				appendNum(readArr(addr, index));
+					
+			} else {
+				appendNum(readNum(addr));
+			}
+			
+				
 			varMode = false;
 		}
 			
@@ -107,7 +148,7 @@ bool copyFormulaIntoEvalBuff(ibword pos, ibword size) {
 	if (varMode) {
 		key[varPos] = 0;
 		ibword addr = findNode(key);
-		if (addr == undefined) return false;
+		if (addr == undefined) return ERROR_KEY_NOT_FOUND;
 		if (key[0] == '@') appendAdr(readAdr(addr));
 		else appendNum(readNum(addr));
 	}
@@ -129,12 +170,12 @@ bool copyFormulaIntoEvalBuff(ibword pos, ibword size) {
 	}
 	EVAL_BUFF[EVAL_LEN] = 0;
 		
-	return true;
+	return 0;
 }
 
 //Copies a string or string formula to EVAL_BUFF for string processing.
 //	Returns false if a variable didn't exist.
-bool copyStringIntoEvalBuff(ibword pos, ibword size) {
+char copyStringIntoEvalBuff(ibword pos, ibword size) {
 	char key[KEY_SIZE + 1];
 	char varPos = 0;
 	bool varMode = false;
@@ -156,17 +197,62 @@ bool copyStringIntoEvalBuff(ibword pos, ibword size) {
 				} else if (!isAlphaNum(varMode) && varMode) {
 					key[varPos] = 0;
 					ibword addr = findNode(key);
-					if (addr == undefined) return false;
-					if (key[0] == '$') {
+					if (addr == undefined) return ERROR_KEY_NOT_FOUND;
+					if (key[0] == '$' && c != '[') {
 						EVAL_BUFF[EVAL_LEN++] = '#';
 						appendAdr(addr);
 						EVAL_BUFF[EVAL_LEN++] = ':';
 						appendAdr(readStrSize(addr));
 					} else if (key[0] == '@') {
 						appendAdr(readAdr(addr));
+					} else if (LINE_BUFF[pos + i] == '[') {
+						ibword index;
+						i += 1;
+						char numBuffPos = 0;
+						char numIsVar = 0;
+						char isOnlyNum = 1;
+						char numBuff[20];
+						char cc = ' ';
+						for (; cc != ']'; i++) {
+							if (i == size) return 0;
+							if (isAlpha(cc))
+								numIsVar = 1;
+							if (!isNum(cc) && !isWS(cc))
+								isOnlyNum = 0;
+							if (!isWS(cc))
+								numBuff[numBuffPos++] = cc;
+							cc = LINE_BUFF[pos + i];
+						}
+						numBuff[numBuffPos] = 0;
+						if (numIsVar) {
+							if (!verifyKey(numBuff))
+								return ERROR_INVALID_KEY;
+							ibword addrIndex = findNode(numBuff);
+							if (addrIndex == undefined)
+								return ERROR_KEY_NOT_FOUND;
+							index = (int)readNum(addrIndex);
+						} else {
+							if (isOnlyNum)
+								index = atoi(numBuff);
+							else
+								return ERROR_SYNTAX;
+						}
+					
+						if (key[0] == '$') {
+							if (index < 0 || index >= readStrSize(addr))
+								return ERROR_OUT_OF_BOUNDS;
+							EVAL_BUFF[EVAL_LEN++] = readStr(addr, index);
+						} else {
+							if (index < 0 || index >= readArrSize(addr))
+								return ERROR_OUT_OF_BOUNDS;
+							appendNum(readArr(addr, index));
+						}
+						varMode = false;
+						continue;
 					} else {
 						appendNum(readNum(addr));
 					}
+			
 					varMode = false;
 				}
 			}
@@ -179,7 +265,7 @@ bool copyStringIntoEvalBuff(ibword pos, ibword size) {
 	if (varMode) {
 		key[varPos] = 0;
 		ibword addr = findNode(key);
-		if (addr == undefined) return false;
+		if (addr == undefined) return ERROR_KEY_NOT_FOUND;
 		if (key[0] == '$') {
 			EVAL_BUFF[EVAL_LEN++] = '#';
 			appendAdr(addr);
@@ -192,17 +278,19 @@ bool copyStringIntoEvalBuff(ibword pos, ibword size) {
 		}
 	}
 	EVAL_BUFF[EVAL_LEN] = 0;
-	return true;
+	return 0;
 }
 
 //Verifies no syntax errors in formulas.
 bool verifyFormula(ibword pos, ibword size) {
 	char balance = 0;
-	char c;
+	char c = 0;
+	char pc;
 	char type = 'x';
 	char ptype = ' ';
 	char ps = ' ';
 	for (ibword i = 0; i < size; i++) {
+		pc = c;
 		c = LINE_BUFF[pos + i];
 		if (isWS(c)) {
 			ps = type;
@@ -217,6 +305,20 @@ bool verifyFormula(ibword pos, ibword size) {
 			ptype = type;
 			type = ')';
 		} else if (!isAlphaNum(c) && !isOperator(c) && !isWS(c) && c != '@') {
+			if (c == '[') {
+				if (!isAlphaNum(pc)) return false;
+				char isVar = 1;
+				char isNum = 1;
+				i++;
+				for (; c != ']'; i++) {
+					if (i == size)
+						return false;
+					c = LINE_BUFF[pos + i];
+					if (!isAlphaNum(c) && !isWS(c) && c != ']')
+						return false;
+				}
+				continue;
+			}
 			return false;
 		}
 		if (isOperator(c)) {
@@ -256,6 +358,7 @@ bool verifyFormula(ibword pos, ibword size) {
 				return false;
 			}
 		}
+		ps = ' ';
 	}
 	
 	if (type == '+' || type == '(' || type == '-') {
@@ -272,6 +375,7 @@ bool verifyString(ibword pos, ibword size) {
 	bool stringMode = false;
 	char c = 'x';
 	char pc;
+	
 	for (ibword i = 0; i < size; i++) {
 		if (isWS(LINE_BUFF[pos + i])) continue;
 		pc = c;
@@ -285,6 +389,20 @@ bool verifyString(ibword pos, ibword size) {
 			} else if (c == '+' && pc == '+') {
 				return false;
 			} else if (!isAlphaNum(c) && c != '$' && c != '@' && c != '+') {
+				if (c == '[') {
+					if (!isAlphaNum(pc)) return false;
+					char isVar = 1;
+					char isNum = 1;
+					i++;
+					for (; c != ']'; i++) {
+						if (i == size)
+							return false;
+						c = LINE_BUFF[pos + i];
+						if (!isAlphaNum(c) && !isWS(c) && c != ']')
+							return false;
+					}
+					continue;
+				}
 				return false;
 			}
 		} else if (stringMode) {

@@ -1,0 +1,20 @@
+;Store 10 numbers in RAM.
+dim i = 0
+dim storage = 10000
+@loop1
+	poke storage + i, i
+	i = i + 1
+if i < 10 then
+	goto @loop1
+fi
+
+;Print out the numbers.
+dim num
+i = 0
+@loop2
+	peek storage + i => num
+	print num
+	i = i + 1
+if i < 10 then
+	goto @loop2
+fi

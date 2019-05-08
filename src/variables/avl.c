@@ -499,7 +499,7 @@ ibword insertNode(AVL_Node *node) {
 	AVL_Node unbalanced;
 	unbalanced.address = undefined;
 	ibword height = 0;
-	ibword return_val = undefined;
+	ibword return_val = AVL_END;
 	
 	//Go to the bottom.
 	while (1) {
@@ -522,8 +522,6 @@ ibword insertNode(AVL_Node *node) {
 		node->parent = root.address;
 		if (comparison > 0) root.right = pushNode(node);
 		else if (comparison < 0) root.left = pushNode(node);
-		if (comparison > 0) return_val = root.right;
-		else if (comparison < 0) return_val = root.left;
 		storeNode(&root);
 		break;
 	}
@@ -564,7 +562,6 @@ ibword insertNode(AVL_Node *node) {
 		if (balance < 0 && pbalance > 0) caseRightLeft(unbalanced);
 		
 	}
-
 	
 	return return_val;
 }
