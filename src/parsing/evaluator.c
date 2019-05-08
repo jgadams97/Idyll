@@ -98,7 +98,7 @@ char copyFormulaIntoEvalBuff(ibword pos, ibword size) {
 					else
 						return ERROR_SYNTAX;
 				}
-
+				index--;
 				if (index < 0 || index >= readArrSize(addr))
 					return ERROR_OUT_OF_BOUNDS;
 					
@@ -237,7 +237,7 @@ char copyStringIntoEvalBuff(ibword pos, ibword size) {
 							else
 								return ERROR_SYNTAX;
 						}
-					
+						index--;
 						if (key[0] == '$') {
 							if (index < 0 || index >= readStrSize(addr))
 								return ERROR_OUT_OF_BOUNDS;

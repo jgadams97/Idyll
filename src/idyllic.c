@@ -160,7 +160,7 @@ char evalAssignment() {
 			else
 				return ERROR_SYNTAX;
 		}
-		
+		index--;
 		//Skip to equal sign.
 		while (c != '=' && !isEOL(c)) {
 			c = LINE_BUFF[++pos];
@@ -561,7 +561,7 @@ char evalDeclaration() {
 			containsAssignment = true;
 		
 		//Make sure the string isn't too massive.
-		if (size > STRING_SIZE_MAX)
+		if (size > STRING_SIZE_MAX || size <= 0)
 			return ERROR_STRING_TOO_LARGE;
 			
 		//Create the variable.
@@ -872,7 +872,7 @@ void printError(char e) {
 			printString("Missing THEN");
 			break;
 		case ERROR_STRING_TOO_LARGE:
-			printString("String is too large");
+			printString("Invalid dimensions");
 			break;
 		case ERROR_UNKNOWN_COMMAND:
 			printString("Unknown command");
