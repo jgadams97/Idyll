@@ -113,8 +113,9 @@ if i < 10 then
 	goto @loop2
 fi
 ```
+You can also see here that comments begin with a semicolon.
 
-Note that strings can also be referenced using an index. This will return that single character at the given index.
+Strings can also be referenced using an index. This will return that single character at the given index.
 
 ```
 dim $str[10] = "Hello!"
