@@ -96,24 +96,24 @@ Array indices can either be numbers or a variable.
 dim myArray[10]
 
 ;Fill the array.
-dim i = 0
+dim i = 1
 @loop1
 	myArray[i] = i * 2
 	i = i + 1
-if i < 10 then
+if i <= 10 then
 	goto @loop1
 fi
 
 ;Print out the numbers.
-i = 0
+i = 1
 @loop2
 	print myArray[i]
 	i = i + 1
-if i < 10 then
+if i <= 10 then
 	goto @loop2
 fi
 ```
-You can also see here that comments begin with a semicolon.
+Arrays are 1-indexed. You can also see here that comments begin with a semicolon.
 
 Assigning a number array a value is valid. The number will simply be placed at the first index of the array.
 
