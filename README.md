@@ -115,6 +115,15 @@ fi
 ```
 You can also see here that comments begin with a semicolon.
 
+Assigning a number array a value is valid. The number will simply be placed at the first index of the array.
+
+```
+dim x[10]
+x = 12
+print x[0]
+print x
+```
+
 Strings can also be referenced using an index. This will return that single character at the given index.
 
 ```
