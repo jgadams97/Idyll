@@ -13,7 +13,7 @@ void main(int argc, char **args) {
 		}
 	}
 	char userInput[100];
-	printString("IdyllicBASIC v0.3\n");
+	printString("IdyllicBASIC v0.5\n");
 	while (1) {
 		printString("] ");
 		char pos = 0;
