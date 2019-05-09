@@ -77,7 +77,9 @@ void writeChar(char c) {
 }
 
 char readChar() {
-	return Serial.read();
+	char c = Serial.read();
+	if (c != -1) lcdPutChar(c);
+	return c;
 }
 
 ibword sizeRAM() {

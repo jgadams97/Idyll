@@ -78,7 +78,11 @@ char evalReference(ibword addr) {
 
 //Evaluate an assignment.
 //	0	No error.
-char evalAssignment() {
+//	If we are assigning a string that has yet
+//		to have a size, we can pass the string
+//		name into "newstr" and it will set the
+//		size before defining it.
+char evalAssignment(char *newstr) {
 	char c;
 	char key[KEY_SIZE];
 	char keyPos = 0;
@@ -113,8 +117,10 @@ char evalAssignment() {
 	if (!verifyKey(key)) return ERROR_INVALID_KEY;
 	
 	//Check if key exists.
-	ibword addr = findNode(key);
-	if (addr == undefined)
+	ibword addr;
+	if (newstr == NULL)
+		addr = findNode(key);
+	if (addr == undefined && newstr == NULL)
 		return ERROR_KEY_NOT_FOUND;
 		
 	//Skip to equal sign.
@@ -193,11 +199,19 @@ char evalAssignment() {
 		} else
 			writeNum(addr, evaluateFormula());
 	} else if (key[0] == '$') {
+		//Make sure the string to evaluate is syntactically correct.
 		if (!verifyString(start, size))
 			return ERROR_SYNTAX;
+		//Load the string for evaluation.
 		char err = copyStringIntoEvalBuff(start, size);
 		if (err != 0) return err;
-		ibword strSize = readStrSize(addr);
+		//Fetch the size of the string variable to store.
+		ibword strSize;
+		if (newstr == NULL)
+			strSize = readStrSize(addr);
+		else
+			strSize = STRING_SIZE_MAX;
+		//Iterator.
 		ibword strPos = 0;
 		char c = readCharFromEvalBuff();
 		if (isArray) {
@@ -208,19 +222,28 @@ char evalAssignment() {
 			EVAL_ADR = undefined;
 			readCharFromEvalBuff();
 		} else {
-			writeRAM(strPos + AVL_END, c);
+			writeRAM(strPos + AVL_END + sizeof(AVL_Node), c);
 			strPos++;
 			while (c = readCharFromEvalBuff()) {
 				if (strPos == strSize)
 					return ERROR_OUT_OF_BOUNDS;
-				writeRAM(strPos + AVL_END, c);
+				writeRAM(strPos + AVL_END + sizeof(AVL_Node), c);
 				strPos++;
 			}
-			for (int i = 0; i < strPos; i++) {
-				writeStr(addr, i, readRAM(i + AVL_END));
-			}
-			if (strPos != strSize) {
-				writeStr(addr, strPos, 0);
+			//Dim the string if it's specified to.
+			if (newstr != NULL) {
+				if (strPos <= 0)
+					return ERROR_SYNTAX;
+				char tmp = readRAM(AVL_END + sizeof(AVL_Node));
+				addr = dimStr(newstr, strPos);
+				writeRAM(addr + sizeof(AVL_Node), tmp);
+			} else {
+				for (int i = 0; i < strPos; i++) {
+					writeStr(addr, i, readRAM(i + AVL_END + sizeof(AVL_Node)));
+				}
+				if (strPos != strSize) {
+					writeStr(addr, strPos, 0);
+				}
 			}
 		}
 	} else {
@@ -526,6 +549,7 @@ char evalDeclaration() {
 	char numBuff[11];
 	char numPos = 0;
 	char hasArray = 0;
+	char smartString = 0;
 	ibword size = 0;
 	ibword arrayStart = pos;
 	ibword arrayEnd = pos;
@@ -571,6 +595,7 @@ char evalDeclaration() {
 			dimArr(key, size);
 			
 	} else {
+			
 		//Skip over white space.
 		while (isWS(c) && !isEOL(c)) {
 			c = LINE_BUFF[++pos];
@@ -583,7 +608,10 @@ char evalDeclaration() {
 			containsAssignment = true;
 		
 		//Create the variable.
-		dimNum(key, 0);
+		if (key[0] == '$')
+			smartString = 1;
+		else 
+			dimNum(key, 0);
 	}
 	
 	
@@ -604,8 +632,12 @@ char evalDeclaration() {
 		LINE_BUFF[pos + 1] = ' ';
 		
 		//Evaluate assignment.
-		ret = evalAssignment();
-		
+		if (smartString)
+			ret = evalAssignment(key);
+		else
+			ret = evalAssignment(NULL);	
+	} else if (smartString) {
+		return ERROR_SYNTAX;
 	}
 
 	return ret;
@@ -826,7 +858,7 @@ char evalLine(ibword pos, ibword addr) {
 	if (type == TYPE_DECLARATION) {
 		ret = evalDeclaration();
 	} else if (type == TYPE_ASSIGNMENT) {
-		ret = evalAssignment();
+		ret = evalAssignment(NULL);
 	} else if (type == TYPE_REFERENCE) {
 		ret = evalReference(addr);
 	} else if (type == TYPE_COMMAND) {

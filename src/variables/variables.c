@@ -42,13 +42,14 @@ void dimAdr(char *name, ibword value) {
 }
 
 //Creates a string variable.
-void dimStr(char *name, ibword size) {
+ibword dimStr(char *name, ibword size) {
 	//Create the node.
 	AVL_Node n = newNode(undefined, size, name, undefined, undefined);
 	ibword addr = insertNode(&n);
 	//If the size > 0, set the first value to 0.
 	if (size > 0)
 		writeRAM(addr + sizeof(AVL_Node), 0);
+	return addr;
 }
 
 //Reads a number variable at an address.

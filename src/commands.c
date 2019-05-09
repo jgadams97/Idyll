@@ -95,8 +95,10 @@ if (compareIgnoreCase(command, "$read")) {
 		ibword size = readStrSize(outputAddress);
 		c = readChar();
 		while (c != '\n' && outputPos != size) {
-			if (c != -1)
-				writeStr(outputAddress, outputPos++, c);
+			if (outputPos < size) {
+				if (c != -1)
+					writeStr(outputAddress, outputPos++, c);
+			}
 			c = readChar();
 		}
 		if (outputPos != size) {
