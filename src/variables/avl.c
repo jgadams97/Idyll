@@ -165,14 +165,16 @@ AVL_Node newNode(ibword address, ibword size, char *key, ibword left, ibword rig
 	n.size = size;
 	n.left = left;
 	n.right = right;
-	for (char i = 0; i < KEY_SIZE; i++) {
-		n.key[i] = ' ';
+	if (key != NULL) {
+		for (char i = 0; i < KEY_SIZE; i++) {
+			n.key[i] = ' ';
+		}
+		for (char i = 0; i < KEY_SIZE; i++) {
+			if (key[i] == 0) break;
+			n.key[i] = key[i];
+		}
+		n.key[KEY_SIZE] = 0;
 	}
-	for (char i = 0; i < KEY_SIZE; i++) {
-		if (key[i] == 0) break;
-		n.key[i] = key[i];
-	}
-	n.key[KEY_SIZE] = 0;
 	n.height = 1;
 	n.parent = undefined;
 	return n;

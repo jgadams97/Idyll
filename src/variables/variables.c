@@ -45,6 +45,7 @@ void dimAdr(char *name, ibword value) {
 ibword dimStr(char *name, ibword size) {
 	//Create the node.
 	AVL_Node n = newNode(undefined, size, name, undefined, undefined);
+	n.next = undefined;
 	ibword addr = insertNode(&n);
 	//If the size > 0, set the first value to 0.
 	if (size > 0)
@@ -64,6 +65,21 @@ float readNum(ibword address) {;
 	return value;
 }
 
+//Creates a dangling node.
+//These nodes are inserted into the list of nodes in the AVL
+//	tree but no other nodes point to them.
+//They can thus be used to store information between nodes
+//	inside the AVL tree without interfering with the tree's
+//	structure itself.
+ibword insertDanglingNode(ibword size) {
+	//Create the node.
+	AVL_Node n = newNode(AVL_END, size, NULL, undefined, undefined);
+	n.next = undefined;
+	AVL_END += sizeof(AVL_Node) + size;
+	storeNode(&n);
+	return n.address;
+}
+
 //Reads an address variable at an address.
 ibword readAdr(ibword address) {;
 	ibword value;	
@@ -78,8 +94,13 @@ ibword readAdr(ibword address) {;
 
 //Reads a character from a string variable at an address at a given index.
 char readStr(ibword address, ibword index) {
-	//Return value;
-	return readRAM(address + sizeof(AVL_Node) + index);
+	AVL_Node n = fetchNode(address);
+	while (index >= n.size) {
+		index -= n.size;
+		n = fetchNode(n.next);
+	}
+	//Return value.
+	return readRAM(n.address + sizeof(AVL_Node) + index);
 }
 
 //Reads an array at an index.
@@ -113,14 +134,25 @@ void writeNum(ibword address, float value) {
 
 //Reads a number variable at an address.
 bool writeStr(ibword address, ibword index, char c) {
-	//Writes character to string.
-	writeRAM(address + sizeof(AVL_Node) + index, c);
+	AVL_Node n = fetchNode(address);
+	while (index >= n.size) {
+		index -= n.size;
+		n = fetchNode(n.next);
+	}
+	//Return value.
+	writeRAM(n.address + sizeof(AVL_Node) + index, c);
 }
 
 //Reads size of a string.
 ibword readStrSize(ibword address) {
+	ibword size;
 	AVL_Node n = fetchNode(address);
-	return n.size;
+	size = n.size;
+	while (n.next != (ibword)undefined) {
+		n = fetchNode(n.next);
+		size += n.size;
+	}
+	return size;
 }
 
 //Reads size of a string.

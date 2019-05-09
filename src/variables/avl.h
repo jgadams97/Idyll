@@ -10,6 +10,7 @@ typedef struct _avl_node {
 	ibword size;
 	ibword parent;
 	ibword height;
+	ibword next;
 } AVL_Node;
 
 //Create a new node.

@@ -38,6 +38,7 @@
 ibword EVAL_POS = 0;
 ibword EVAL_ADR = undefined;
 ibword EVAL_STR_SIZE = 0;
+ibword EVAL_STR_POS = 0;
 bool EVAL_STR = false;
 char LINE_BUFF[LINE_BUFF_MAX + 1];
 

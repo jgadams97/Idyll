@@ -428,6 +428,7 @@ char readCharFromEvalBuff() {
 			EVAL_ADR = undefined;
 			EVAL_STR_SIZE = 0;
 			EVAL_STR = false;
+			EVAL_STR_POS = 0;
 			return 0;
 		}
 		c = EVAL_BUFF[EVAL_POS++];
@@ -472,7 +473,7 @@ char readCharFromEvalBuff() {
 		}
 	} else {
 		if (EVAL_STR_SIZE > 0) {
-			c = readStr(EVAL_ADR++, 0);
+			c = readStr(EVAL_ADR, EVAL_STR_POS++);
 			if (c == 0) {
 				EVAL_ADR = undefined;
 				return readCharFromEvalBuff();
@@ -480,6 +481,7 @@ char readCharFromEvalBuff() {
 			EVAL_STR_SIZE--;
 		} else {
 			EVAL_ADR = undefined;
+			EVAL_STR_POS = 0;
 			return readCharFromEvalBuff();
 		}
 	}

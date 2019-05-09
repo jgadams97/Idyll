@@ -83,6 +83,8 @@ char evalReference(ibword addr) {
 //		name into "newstr" and it will set the
 //		size before defining it.
 char evalAssignment(char *newstr) {
+
+	
 	char c;
 	char key[KEY_SIZE];
 	char keyPos = 0;
@@ -220,15 +222,34 @@ char evalAssignment(char *newstr) {
 			writeStr(addr, index, c);
 			//Reset the buffer.
 			EVAL_ADR = undefined;
+			EVAL_STR_POS = 0;
 			readCharFromEvalBuff();
 		} else {
 			writeRAM(strPos + AVL_END + sizeof(AVL_Node), c);
 			strPos++;
 			while (c = readCharFromEvalBuff()) {
-				if (strPos == strSize)
-					return ERROR_OUT_OF_BOUNDS;
 				writeRAM(strPos + AVL_END + sizeof(AVL_Node), c);
 				strPos++;
+			}
+			if (strPos > strSize && newstr == NULL) {
+				//Find next node.
+				AVL_Node n = fetchNode(addr);
+				while (n.next != (ibword)undefined) {
+					n = fetchNode(n.next);
+				}
+				//Insert new dandling node.
+				n.next = insertDanglingNode(strPos - strSize);
+				storeNode(&n);
+				//Recalculate string.
+				strPos = 0;
+				c = readCharFromEvalBuff();
+				writeRAM(strPos + AVL_END + sizeof(AVL_Node), c);
+				strPos++;
+				while (c = readCharFromEvalBuff()) {
+					writeRAM(strPos + AVL_END + sizeof(AVL_Node), c);
+					strPos++;
+				}
+				strSize = strPos;
 			}
 			//Dim the string if it's specified to.
 			if (newstr != NULL) {
@@ -251,6 +272,31 @@ char evalAssignment(char *newstr) {
 		return ERROR_SYNTAX;
 	}
 	
+	/*
+	int node_count = 1;
+	int disp_pos = 0;
+	for (int j = 0; j < AVL_END; j++) {
+		AVL_Node myNode = fetchNode(j);
+		printf("\nNode %i: \n\t", node_count++);
+		disp_pos = 0;
+		for (int i = j; i < j + sizeof(AVL_Node) + myNode.size; i++) {	
+			char ln = readRAM(i) >> 4;
+			char rn = readRAM(i) & 0xF;
+			if (ln >= 0 && ln <= 9) ln += '0';
+			else ln += 'A' - 10;
+			if (rn >= 0 && rn <= 9) rn += '0';
+			else rn += 'A' - 10;
+			printf("%c%c", ln, rn);
+			//printf("[%c]", readRAM(i));
+			if (disp_pos % 16 == 15) {
+				printf("\n\t");
+			}
+			disp_pos++;
+		}
+		j += sizeof(AVL_Node) + myNode.size - 1;
+	}
+	printf("\n");
+	*/
 	return 0;
 }
 
