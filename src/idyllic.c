@@ -658,7 +658,8 @@ char evalDeclaration() {
 		//Create the variable.
 		if (key[0] == '$') {
 			smartString = 1;
-			dimStr(key, 0);
+			if (!containsAssignment)
+				dimStr(key, 0);
 		} else 
 			dimNum(key, 0);
 	}
