@@ -13,7 +13,7 @@ However, Idyllic can make use of external RAMs and program memory. The BASIC pro
 Variables in Idyllic can be declared with the DIM command.
 ```
 dim myVar
-dim $myVar[15]
+dim $myVar
 ```
 There are three main data types in Idyllic: 1. Numbers. 2. Strings. 3. Addresses.
 
@@ -27,11 +27,22 @@ $myVar = "Hello, World!"
 You can also assign values on the same line you declare the variable.
 ```
 dim myVar = 5.2
-dim $myVar[15] = "Hello, World!"
+dim $myVar = "Hello, World!"
 ```
-Strings must be provided a size when declaring them. In the case above, the size of the string is 15.
+Strings can be provided a size when declaring them. In the case above, the string is not provided a size, so it defaults to the size of the "Hello, World!" string. 
 
-Trying to store a string into a string variable larger than it was declared as will result in an out of bounds error.
+Trying to store a string into a string variable larger than it will cause the string to expand in size.
+
+```
+dim $myVar = "Hello, "
+$myVar = $myVar + "World!"
+```
+
+Strings can have a specific size specified in their declaration.
+
+```
+dim $myVar[10]
+```
 
 You cannot "dim" an address. Addresses are created like so:
 
