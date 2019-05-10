@@ -188,13 +188,6 @@ AVL_Node fetchNode(ibword pos) {
 		buff[i] = readRAM(i + pos);
 	}
 	
-	/*writeRAM(64, (ibword)-128);
-	Serial.print("]");
-	Serial.print((ibword)readRAM(64));
-	Serial.println("[");*/
-	
-	
-	
 	AVL_Node ret;
 	unimemcpy(&ret, buff, sizeof(AVL_Node));
 	return ret;

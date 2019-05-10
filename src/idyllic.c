@@ -631,7 +631,9 @@ char evalDeclaration() {
 			containsAssignment = true;
 		
 		//Make sure the string isn't too massive.
-		if (size > STRING_SIZE_MAX || size <= 0)
+		if (size > STRING_SIZE_MAX || size < 0)
+			return ERROR_STRING_TOO_LARGE;
+		if (key[0] != '$' && size == 0)
 			return ERROR_STRING_TOO_LARGE;
 			
 		//Create the variable.
@@ -654,9 +656,10 @@ char evalDeclaration() {
 			containsAssignment = true;
 		
 		//Create the variable.
-		if (key[0] == '$')
+		if (key[0] == '$') {
 			smartString = 1;
-		else 
+			dimStr(key, 0);
+		} else 
 			dimNum(key, 0);
 	}
 	
@@ -682,10 +685,8 @@ char evalDeclaration() {
 			ret = evalAssignment(key);
 		else
 			ret = evalAssignment(NULL);	
-	} else if (smartString) {
-		return ERROR_SYNTAX;
 	}
-
+	
 	return ret;
 }
 
@@ -920,7 +921,6 @@ char evalLine(ibword pos, ibword addr) {
 //Pribwords an error message associated
 //	with an error code.
 void printError(char e) {
-
 	switch (e) {
 		case 1:
 			printString("Syntax error");
@@ -1014,7 +1014,7 @@ char eval(ibword pos) {
 	}
 	
 	if (skipMode != 0) {
-		printString("Unclosed IF statement.\n");
+		printString("Missing FI.\n");
 		return 50;
 	}
 	return 0;

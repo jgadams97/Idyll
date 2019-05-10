@@ -77,7 +77,7 @@ void writeChar(char c) {
 }
 
 char readChar() {
-	char c = Serial.read();
+	char c = kbGetChar();
 	if (c != -1) lcdPutChar(c);
 	return c;
 }

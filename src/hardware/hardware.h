@@ -23,6 +23,7 @@ char readFileOnDevice(ibword pos);
 #ifdef ATMEGA328P
 #include "23LC1024.h"
 #include "LCD2004.h"
+#include "keyboard.c"
 #include "file/file.h"
 #endif
 #include "hardware.c"
