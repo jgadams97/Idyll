@@ -1,4 +1,4 @@
-dim $name[20]
+dim $name
 print "What is your name?"
 $read => $name
 print "Hello, " + $name + "!"
