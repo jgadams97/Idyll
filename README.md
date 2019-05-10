@@ -44,6 +44,8 @@ Strings can have a specific size specified in their declaration.
 dim $myVar[10]
 ```
 
+It is recommended to specify the size of the string as much as possible. If a string has to grow in size, it needs a new node to store that new data, which takes up more memory. When iterating through the string, it would need to iterate through the nodes, which is slower. Thus, declaring your string of the proper size initially rather than have it dynamically grow on its own both uses less RAM and gives better performance. 
+
 You cannot "dim" an address. Addresses are created like so:
 
 ```
@@ -83,7 +85,7 @@ Only "==" and "!=" are valid for string comparisons. String comparisons only app
 
 Some commands output values. These values can be redirected into a variable using the "=>" symbol.
 ```
-dim $name[20]
+dim $name
 $read => $name
 print "Hello, " + $name + "!"
 ```
