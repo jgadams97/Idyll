@@ -134,7 +134,7 @@ Assigning a number array a value is valid. The number will simply be placed at t
 ```
 dim x[10]
 x = 12
-print x[0]
+print x[1]
 print x
 ```
 
