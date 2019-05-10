@@ -88,22 +88,21 @@ if (compareIgnoreCase(command, "free")) {
 if (compareIgnoreCase(command, "$read")) {
 	//Needs output.
 	if (hasArrow) {
-		if (outputKey[0] != '$')
-			return ERROR_INVALID_TYPE;
-		char c, outputPos;
-		outputPos = 0;
-		ibword size = readStrSize(outputAddress);
-		c = readChar();
-		while (c != '\n' && outputPos != size) {
-			if (outputPos < size) {
-				if (c != -1)
-					writeStr(outputAddress, outputPos++, c);
-			}
+		char pos = 0;
+		for (char i = 0; i < KEY_SIZE && outputKey[pos] != 0; i++) {
+			LINE_BUFF[pos++] = outputKey[i];
+		}
+		LINE_BUFF[pos++] = '=';
+		LINE_BUFF[pos++] = '\"';
+		char c = readChar();
+		while (c != '\n') {
+			LINE_BUFF[pos++] = c == '\"' ? '\'' : c;
 			c = readChar();
 		}
-		if (outputPos != size) {
-			writeStr(outputAddress, outputPos++, 0);
-		}
+		LINE_BUFF[pos++] = '\"';
+		LINE_BUFF[pos++] = '\n';
+		return evalAssignment(NULL);
+		
 	} else {
 		char c;
 		c = readChar();
