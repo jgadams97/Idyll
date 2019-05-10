@@ -99,6 +99,7 @@ x[5] = 12
 x[2] = 8
 print x[5] + x[2]
 ```
+Arrays cannot have a size of 0. 
 
 Array indices can either be numbers or a variable.
 
@@ -138,14 +139,14 @@ print x
 Strings can also be referenced using an index. This will return that single character at the given index.
 
 ```
-dim $str[10] = "Hello!"
+dim $str = "Hello!"
 print $str[1]
 ```
 
 You may also assign that character a new value. 
 
 ```
-dim $str[10] = "Hello!"
+dim $str = "Hello!"
 $str[2] = "n"
 print $str
 ```
