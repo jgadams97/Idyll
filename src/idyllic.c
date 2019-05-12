@@ -1,24 +1,22 @@
 #include "parsing/evaluator.h"
-char eval(ibword pos);
+char evalPos(ibword pos);
 ibword PROGRAM_LOAD_ADDR;
 char PROGRAM_IN_RAM;
-/*842
-41
-34*/
 
 //Returns -1 if line is too long.
 //	Otherwise returns offset.
-bool copyStringIntoLineBuff(char *s) {
+char copyStringIntoLineBuff(char *s) {
 	ibword i = 0;
-	char c = s[0];
-	while (!isEOL(c)) {
-		LINE_BUFF[i] = c;
-		c = s[++i];
+	while (!isEOL(s[i])) {
+		LINE_BUFF[i] = s[i];
+		i++;
 		if (i == LINE_BUFF_MAX)
-			return 0;
+			break;
 	}
+	if (i == LINE_BUFF_MAX)
+		return false;
 	LINE_BUFF[i] = 0;
-	return 1;
+	return true;
 }
 
 ibword copyFileIntoLineBuff(ibword pos) {
@@ -28,9 +26,11 @@ ibword copyFileIntoLineBuff(ibword pos) {
 		LINE_BUFF[i++] = c;
 		pos += 1;
 		if (i == LINE_BUFF_MAX)
-			return -1;
+			break;
 		c = PROGRAM_IN_RAM ? readRAM(pos) : readFileOnDevice(pos);
 	}
+	if (i == LINE_BUFF_MAX)
+		return -1;
 	LINE_BUFF[i] = 0;
 	return i + 1;
 }
@@ -715,16 +715,26 @@ bool compareIgnoreCase(const char *a, const char *b) {
 }
 
 //Evaluates a command.
+//Making arrays global saves program space.
+#ifdef ARDUINO
+char outputKey[KEY_SIZE + 1];
+ibword argsStart[10];
+ibword argsSize[10];
+char argsType[10];
+char command[10];
+#endif
 char evalCommand() {
-
+	#ifdef DESKTOP
 	char outputKey[KEY_SIZE + 1];
-	ibword outputAddress = undefined;
 	ibword argsStart[10];
 	ibword argsSize[10];
+	char argsType[10];
+	char command[10];
+	#endif
+	ibword outputAddress = undefined;
 	char arg = 1;
 	char c;
 	
-	char command[10];
 	char commandPos = 0;
 	ibword pos = 0;
 	bool isInQuotes = false;
@@ -743,6 +753,8 @@ char evalCommand() {
 		if (commandPos == 10)
 			return ERROR_UNKNOWN_COMMAND;
 		command[commandPos++] = c;
+		if (commandPos == 10)
+			return ERROR_ARGUMENT_COUNT;
 		c = LINE_BUFF[++pos];
 	}
 	command[commandPos] = 0;
@@ -791,7 +803,6 @@ char evalCommand() {
 		}
 	}
 	
-	
 	//Remove arrow from arguments.
 	if (hasArrow) {
 		//Remove arrow from arguments.
@@ -834,6 +845,18 @@ char evalCommand() {
 		if (outputAddress == undefined)
 			return ERROR_KEY_NOT_FOUND;
 		
+	}
+	
+	//Verify types.
+	for (char i = 1; i < arg; i++) {
+		argsType[i] = getExprType(argsStart[i], argsSize[i]);
+		if (argsType[i] == TYPE_NUM) {
+			if (!verifyFormula(argsStart[i], argsSize[i]))
+				return ERROR_SYNTAX;
+		} else {
+			if (!verifyString(argsStart[i], argsSize[i]))
+				return ERROR_SYNTAX;
+		}
 	}
 	
 	#include "commands.c"
@@ -968,7 +991,7 @@ void printError(char e) {
 }
 
 //Evaluates a program at position.
-char eval(ibword pos) {
+char evalPos(ibword pos) {
 	ibword size;
 	char eof = 10;
 	ibword skipMode = 0;
@@ -977,8 +1000,7 @@ char eval(ibword pos) {
 	while (eof == 10) {
 		lineNum++;
 		size = copyFileIntoLineBuff(pos);
-		if (size == -1)
-			return ERROR_OUT_OF_BOUNDS;
+		if (size == -1) return ERROR_SYNTAX;
 		eof = PROGRAM_IN_RAM ? readRAM(pos+size-1) : readFileOnDevice(pos+size-1);
 		char err;
 		if (skipMode > 0) {
@@ -1022,4 +1044,11 @@ char eval(ibword pos) {
 		return 50;
 	}
 	return 0;
+}
+
+//Evaluates a single line.
+char eval(char *line) {
+	if (!copyStringIntoLineBuff(line))
+		return ERROR_SYNTAX;
+	return evalLine(0, 0);
 }

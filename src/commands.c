@@ -1,29 +1,3 @@
-/*
-	ADDING CUSTOM COMMANDS
-	
-	Place your command within an IF statement using
-	the compareIgnoreCase() function. The "command"
-	variable contains the string of the command
-	name.
-	
-	To verify the number of arguments the command
-	should contain, check the "arg" variable which
-	contains an argument count. 1 means no
-	arguments. 
-	
-	If the argument count is invalid, return
-	ERROR_ARGUMENT_COUNT.
-	
-	Arguments can either be string or numeric
-	expressions. Check the type using getExprType.
-	
-	The type can be TYPE_NUM or TYPE_STR. If the
-	type is invalid, return ERROR_INVALID_TYPE.
-	
-	
-
-*/
-
 //Quit command.
 if (compareIgnoreCase(command, "quit")) {
 	return ERROR_HALTING;
@@ -33,17 +7,13 @@ if (compareIgnoreCase(command, "print")) {
 	//Verify number of arguments.
 	if (arg != 2)
 		return ERROR_ARGUMENT_COUNT;
-	if (getExprType(argsStart[1], argsSize[1]) == TYPE_NUM) {
-		if (!verifyFormula(argsStart[1], argsSize[1]))
-			return ERROR_SYNTAX;
+	if (argsType[1] == TYPE_NUM) {
 		char err = copyFormulaIntoEvalBuff(argsStart[1], argsSize[1]);
 		if (err != 0) return err;
 		float ans = evaluateFormula();
 		printFloat(ans);
 		writeChar('\n');
 	} else {
-		if (!verifyString(argsStart[1], argsSize[1]))
-			return ERROR_SYNTAX;
 		char err = copyStringIntoEvalBuff(argsStart[1], argsSize[1]);
 		if (err != 0) return err;
 		char c;
@@ -73,9 +43,7 @@ if (compareIgnoreCase(command, "goto")) {
 	if (arg != 2)
 		return ERROR_ARGUMENT_COUNT;
 		
-	if (getExprType(argsStart[1], argsSize[1]) == TYPE_NUM) {
-		if (!verifyFormula(argsStart[1], argsSize[1]))
-			return ERROR_SYNTAX;
+	if (argsType[1] == TYPE_NUM) {
 		char err = copyFormulaIntoEvalBuff(argsStart[1], argsSize[1]);
 		if (err != 0) return err;
 		return ERROR_CHANGE_ADDRESS;
@@ -122,9 +90,12 @@ if (compareIgnoreCase(command, "$read")) {
 		LINE_BUFF[pos++] = '\"';
 		char c = readChar();
 		while (c != '\n') {
-			LINE_BUFF[pos++] = c == '\"' ? '\'' : c;
-			if (pos == LINE_BUFF_MAX - 2)
-				break;
+			if (c != -1 && c != 0 && c != 0x08) {
+				LINE_BUFF[pos++] = c == '\"' ? '\'' : c;
+			} else if (c == 0x08 && pos != 0) {
+				backspace();
+				pos--;
+			}
 			c = readChar();
 		}
 		LINE_BUFF[pos++] = '\"';
@@ -148,12 +119,10 @@ if (compareIgnoreCase(command, "run")) {
 		return ERROR_ARGUMENT_COUNT;
 	
 	if (arg == 2) {
-		if (getExprType(argsStart[1], argsSize[1]) != TYPE_STR)
+		if (argsType[1] != TYPE_STR)
 			return ERROR_INVALID_TYPE;
 		char fileName[20];
 		char fPos = 0;
-		if (!verifyString(argsStart[1], argsSize[1]))
-			return ERROR_SYNTAX;
 		char err = copyStringIntoEvalBuff(argsStart[1], argsSize[1]);
 		if (err != 0) return err;
 		char c;
@@ -169,11 +138,11 @@ if (compareIgnoreCase(command, "run")) {
 
 		openFileOnDevice(fileName);
 		PROGRAM_IN_RAM = 0;
-		eval(0);
+		evalPos(0);
 		closeFileOnDevice();
 	} else {
 		PROGRAM_IN_RAM = 1;
-		eval(PROGRAM_LOAD_ADDR);
+		evalPos(PROGRAM_LOAD_ADDR);
 	}
 	return 0;
 }
@@ -186,10 +155,8 @@ if (compareIgnoreCase(command, "load")) {
 		
 	char fileName[20];
 	char fPos = 0;
-	if (getExprType(argsStart[1], argsSize[1]) != TYPE_STR)
+	if (argsType[1] != TYPE_STR)
 		return ERROR_INVALID_TYPE;
-	if (!verifyString(argsStart[1], argsSize[1]))
-		return ERROR_SYNTAX;
 	char err = copyStringIntoEvalBuff(argsStart[1], argsSize[1]);
 	if (err != 0) return err;
 	char c;
@@ -208,7 +175,7 @@ if (compareIgnoreCase(command, "load")) {
 	PROGRAM_LOAD_ADDR = sizeRAM() - s - 1;
 	printString("Loading ");
 	printInt(s + 1);
-	printString(" bytes...\n");
+	printString(" bytes.\n");
 	for (ibword i = 0; i < s; i++) {
 		char rc = readFileOnDevice(i);
 		writeRAM(PROGRAM_LOAD_ADDR + i, rc);
@@ -230,18 +197,14 @@ if (compareIgnoreCase(command, "clear")) {
 	return 0;
 }
 
-
-
 //Peeks at the RAM.
 if (compareIgnoreCase(command, "peek")) {
 
 	if (arg != 2)
 		return ERROR_ARGUMENT_COUNT;
 	
-	if (getExprType(argsStart[1], argsSize[1]) != TYPE_NUM)
+	if (argsType[1] != TYPE_NUM)
 		return ERROR_INVALID_TYPE;
-	if (!verifyFormula(argsStart[1], argsSize[1]))
-		return ERROR_SYNTAX;
 	char err = copyFormulaIntoEvalBuff(argsStart[1], argsSize[1]);
 	if (err != 0) return err;
 	if (pos < 0 || pos >= sizeRAM())
@@ -257,7 +220,7 @@ if (compareIgnoreCase(command, "peek")) {
 		writeNum(outputAddress, readRAM(pos));
 	} else {
 		printFloat(readRAM(pos));
-		putchar('\n');
+		printString("\n");
 	}
 	return 0;
 }
@@ -269,20 +232,16 @@ if (compareIgnoreCase(command, "poke")) {
 		return ERROR_ARGUMENT_COUNT;
 	
 	ibword a;
-	if (getExprType(argsStart[1], argsSize[1]) != TYPE_NUM)
+	if (argsType[1] != TYPE_NUM)
 		return ERROR_INVALID_TYPE;
-	if (!verifyFormula(argsStart[1], argsSize[1]))
-		return ERROR_SYNTAX;
 	err = copyFormulaIntoEvalBuff(argsStart[1], argsSize[1]);
 	if (err != 0) return err;
 	a = (ibword)evaluateFormula();
 	
 	//float b;
 	char b;
-	if (getExprType(argsStart[2], argsSize[2]) != TYPE_NUM)
+	if (argsType[2] != TYPE_NUM)
 		return ERROR_INVALID_TYPE;
-	if (!verifyFormula(argsStart[2], argsSize[2]))
-		return ERROR_SYNTAX;
 	err = copyFormulaIntoEvalBuff(argsStart[2], argsSize[2]);
 	if (err != 0) return err;
 	b = (char)evaluateFormula();
