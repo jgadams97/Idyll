@@ -1,3 +1,29 @@
+/*
+	ADDING CUSTOM COMMANDS
+	
+	Place your command within an IF statement using
+	the compareIgnoreCase() function. The "command"
+	variable contains the string of the command
+	name.
+	
+	To verify the number of arguments the command
+	should contain, check the "arg" variable which
+	contains an argument count. 1 means no
+	arguments. 
+	
+	If the argument count is invalid, return
+	ERROR_ARGUMENT_COUNT.
+	
+	Arguments can either be string or numeric
+	expressions. Check the type using getExprType.
+	
+	The type can be TYPE_NUM or TYPE_STR. If the
+	type is invalid, return ERROR_INVALID_TYPE.
+	
+	
+
+*/
+
 //Quit command.
 if (compareIgnoreCase(command, "quit")) {
 	return ERROR_HALTING;
@@ -97,6 +123,8 @@ if (compareIgnoreCase(command, "$read")) {
 		char c = readChar();
 		while (c != '\n') {
 			LINE_BUFF[pos++] = c == '\"' ? '\'' : c;
+			if (pos == LINE_BUFF_MAX - 2)
+				break;
 			c = readChar();
 		}
 		LINE_BUFF[pos++] = '\"';

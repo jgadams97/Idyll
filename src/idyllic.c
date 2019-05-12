@@ -8,16 +8,17 @@ char PROGRAM_IN_RAM;
 
 //Returns -1 if line is too long.
 //	Otherwise returns offset.
-void copyStringIntoLineBuff(char *s) {
+bool copyStringIntoLineBuff(char *s) {
 	ibword i = 0;
 	char c = s[0];
 	while (!isEOL(c)) {
 		LINE_BUFF[i] = c;
 		c = s[++i];
 		if (i == LINE_BUFF_MAX)
-			return;
+			return 0;
 	}
 	LINE_BUFF[i] = 0;
+	return 1;
 }
 
 ibword copyFileIntoLineBuff(ibword pos) {
@@ -976,6 +977,8 @@ char eval(ibword pos) {
 	while (eof == 10) {
 		lineNum++;
 		size = copyFileIntoLineBuff(pos);
+		if (size == -1)
+			return ERROR_OUT_OF_BOUNDS;
 		eof = PROGRAM_IN_RAM ? readRAM(pos+size-1) : readFileOnDevice(pos+size-1);
 		char err;
 		if (skipMode > 0) {

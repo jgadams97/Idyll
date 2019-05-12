@@ -20,10 +20,16 @@ void main(int argc, char **args) {
 		char c = readChar();
 		while (c != '\n') {
 			userInput[pos++] = c;
+			if (pos == 100)
+				break;
 			c = readChar();
 		}
 		userInput[pos] = 0;
-		copyStringIntoLineBuff(userInput);
+		if (!copyStringIntoLineBuff(userInput)) {
+			printf("Input too long.\n");
+			fflush(stdin);
+			continue;
+		}
 		char e;
 		if ( (e = evalLine(0, 0)) != 0) {
 			if (e == ERROR_HALTING)
