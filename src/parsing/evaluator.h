@@ -20,6 +20,9 @@
 #define ERROR_FILE_NOT_FOUND 16
 #define ERROR_CONDITIONAL_UNTRIGGERED 17
 #define ERROR_HALTING 18
+#define ERROR_SUBROUTINE 19
+#define ERROR_CHANGE_ADDRESS_CALL 20
+#define ERROR_STACK 21
 
 //Variable types.
 #define TYPE_NUM 0
@@ -30,15 +33,16 @@
 #define TYPE_ASSIGNMENT 2
 #define TYPE_REFERENCE 3
 #define TYPE_CONDITIONAL 4
-#define TYPE_UNCONDITIONAL 5
+#define TYPE_END 5
 #define TYPE_COMMENT 6
 #define TYPE_EMPTY 7
+#define TYPE_SUBROUTINE 8
 #define LINE_BUFF_MAX 100
 #define STRING_SIZE_MAX 1000
-ibword EVAL_POS = 0;
 ibword EVAL_ADR = undefined;
-ibword EVAL_STR_SIZE = 0;
-ibword EVAL_STR_POS = 0;
+signed short EVAL_POS = 0;
+signed short EVAL_STR_SIZE = 0;
+signed short EVAL_STR_POS = 0;
 bool EVAL_STR = false;
 char LINE_BUFF[LINE_BUFF_MAX + 1];
 

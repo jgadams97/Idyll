@@ -4,24 +4,6 @@ char JOURNAL_LOG_SIZE;
 char JOURNAL_LOG[JOURNAL_MAX];
 float JOURNAL_DATA[JOURNAL_MAX];
 
-void journal_print() {
-	printf("Log: ");
-	for (char i = 0; i < JOURNAL_LOG_SIZE; i++) {
-		printf("%i", JOURNAL_LOG[i]);
-		if (i != JOURNAL_LOG_SIZE - 1) {
-			printf(",");
-		}
-	}
-	printf("\n");
-	printf("Data: ");
-	for (char i = 0; i < JOURNAL_DATA_SIZE; i++) {
-		printf("%f", JOURNAL_DATA[i]);
-		if (i != JOURNAL_DATA_SIZE - 1) {
-			printf(",");
-		}
-	}
-	printf("\n");
-}
 //Initialize the journal.
 void journal_init() {
 	JOURNAL_LOG_SIZE = 0;

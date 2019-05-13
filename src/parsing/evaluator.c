@@ -13,11 +13,7 @@ char getExprType(ibword pos, ibword size) {
 //Appends a floating poibword number to the end of EVAL_BUFF.
 void appendNum(float num) {
 	char buff[20];
-	if ( (ibword)num == num )
-		ibwordToString(buff, (ibword)num);
-	else
-		floatToString(buff, num);
-	
+	floatToString(buff, num);
 	for (char i = 0; i < strlen(buff); i++) {
 		EVAL_BUFF[EVAL_LEN++] = buff[i];
 	}
@@ -64,10 +60,10 @@ char copyFormulaIntoEvalBuff(ibword pos, ibword size) {
 		} else if (!isAlphaNum(varMode) && varMode) {
 			key[varPos] = 0;
 			ibword addr = findNode(key);
-			if (addr == undefined) return ERROR_KEY_NOT_FOUND;
+			if (addr == (ibword)undefined) return ERROR_KEY_NOT_FOUND;
 			if (key[0] == '@') appendAdr(readAdr(addr));
 			else if (LINE_BUFF[pos + i] == '[') {
-				ibword index;
+				signed short index;
 				i += 1;
 				char numBuffPos = 0;
 				char numIsVar = 0;
@@ -84,12 +80,14 @@ char copyFormulaIntoEvalBuff(ibword pos, ibword size) {
 						numBuff[numBuffPos++] = cc;
 					cc = LINE_BUFF[pos + i];
 				}
+				if (numBuffPos == 0)
+					return ERROR_SYNTAX;
 				numBuff[numBuffPos] = 0;
 				if (numIsVar) {
 					if (!verifyKey(numBuff))
 						return ERROR_INVALID_KEY;
 					ibword addrIndex = findNode(numBuff);
-					if (addrIndex == undefined)
+					if (addrIndex == (ibword)undefined)
 						return ERROR_KEY_NOT_FOUND;
 					index = (int)readNum(addrIndex);
 				} else {
@@ -118,14 +116,14 @@ char copyFormulaIntoEvalBuff(ibword pos, ibword size) {
 		} else if (c == ')') {
 			ibword fs = fixerStack[fixerStackPos - 1];
 			fixerStackPos--;
-			if (fs != -1) {
+			if (fs != (ibword)-1) {
 				EVAL_BUFF[EVAL_LEN++] = '+';
 				EVAL_BUFF[EVAL_LEN++] = '0';
 			}
 		} else if (isOperator(c)) {
 			fixerStack[fixerStackPos - 1] = -1;
 		}
-			
+		
 		if (!varMode) {
 			if (c == '-') {
 				if (pc == 0 || isOperator(pc) || pc == '(') {
@@ -148,7 +146,7 @@ char copyFormulaIntoEvalBuff(ibword pos, ibword size) {
 	if (varMode) {
 		key[varPos] = 0;
 		ibword addr = findNode(key);
-		if (addr == undefined) return ERROR_KEY_NOT_FOUND;
+		if (addr == (ibword)undefined) return ERROR_KEY_NOT_FOUND;
 		if (key[0] == '@') appendAdr(readAdr(addr));
 		else appendNum(readNum(addr));
 	}
@@ -169,7 +167,32 @@ char copyFormulaIntoEvalBuff(ibword pos, ibword size) {
 		}
 	}
 	EVAL_BUFF[EVAL_LEN] = 0;
-		
+	
+	//Fix negatives.
+	EVAL_LEN = 0;
+	pc = 0;
+	c = ' ';
+	for (char i = 0; i < size; i++) {
+		pc = c;
+		c = EVAL_BUFF[i];
+		if (c == '-') {
+			if (pc == 0 || isOperator(pc) || pc == '(') {
+				TMP_EVAL_BUFF[EVAL_LEN++] = '(';
+				TMP_EVAL_BUFF[EVAL_LEN++] = '0';
+				TMP_EVAL_BUFF[EVAL_LEN++] = '-';
+				TMP_EVAL_BUFF[EVAL_LEN++] = '1';
+				TMP_EVAL_BUFF[EVAL_LEN++] = ')';
+				TMP_EVAL_BUFF[EVAL_LEN++] = '*';
+			} else {
+				TMP_EVAL_BUFF[EVAL_LEN++] = c;				
+			}
+		} else {
+			TMP_EVAL_BUFF[EVAL_LEN++] = c;
+		}
+	}
+	TMP_EVAL_BUFF[EVAL_LEN] = 0;
+	unimemcpy(EVAL_BUFF, TMP_EVAL_BUFF, EVAL_LEN + 1);
+	
 	return 0;
 }
 
@@ -197,7 +220,7 @@ char copyStringIntoEvalBuff(ibword pos, ibword size) {
 				} else if (!isAlphaNum(varMode) && varMode) {
 					key[varPos] = 0;
 					ibword addr = findNode(key);
-					if (addr == undefined) return ERROR_KEY_NOT_FOUND;
+					if (addr == (ibword)undefined) return ERROR_KEY_NOT_FOUND;
 					if (key[0] == '$' && c != '[') {
 						EVAL_BUFF[EVAL_LEN++] = '#';
 						appendAdr(addr);
@@ -223,12 +246,14 @@ char copyStringIntoEvalBuff(ibword pos, ibword size) {
 								numBuff[numBuffPos++] = cc;
 							cc = LINE_BUFF[pos + i];
 						}
+						if (numBuffPos == 0)
+							return ERROR_SYNTAX;
 						numBuff[numBuffPos] = 0;
 						if (numIsVar) {
 							if (!verifyKey(numBuff))
 								return ERROR_INVALID_KEY;
 							ibword addrIndex = findNode(numBuff);
-							if (addrIndex == undefined)
+							if (addrIndex == (ibword)undefined)
 								return ERROR_KEY_NOT_FOUND;
 							index = (int)readNum(addrIndex);
 						} else {
@@ -265,7 +290,7 @@ char copyStringIntoEvalBuff(ibword pos, ibword size) {
 	if (varMode) {
 		key[varPos] = 0;
 		ibword addr = findNode(key);
-		if (addr == undefined) return ERROR_KEY_NOT_FOUND;
+		if (addr == (ibword)undefined) return ERROR_KEY_NOT_FOUND;
 		if (key[0] == '$') {
 			EVAL_BUFF[EVAL_LEN++] = '#';
 			appendAdr(addr);
@@ -380,9 +405,6 @@ bool verifyString(ibword pos, ibword size) {
 		if (isWS(LINE_BUFF[pos + i])) continue;
 		pc = c;
 		c = LINE_BUFF[pos + i];
-		if (c == '\"' && pc == '\"') {
-			return false;
-		}
 		if (!stringMode) {
 			if (c == '\"') {
 				stringMode = true;
@@ -422,7 +444,7 @@ bool verifyString(ibword pos, ibword size) {
 char readCharFromEvalBuff() {
 	char c;
 	
-	if (EVAL_ADR == undefined) {
+	if (EVAL_ADR == (ibword)undefined) {
 		if (EVAL_POS >= EVAL_LEN) {
 			EVAL_POS = 0;
 			EVAL_ADR = undefined;

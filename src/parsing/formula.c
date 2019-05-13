@@ -6,11 +6,13 @@
 
 #define EVAL_NUM_BUFF_SIZE 13
 #define EVAL_BUFF_SIZE 50
+char TMP_EVAL_BUFF[EVAL_BUFF_SIZE];
 char EVAL_BUFF[EVAL_BUFF_SIZE];
 char EVAL_NUM_BUFF[EVAL_NUM_BUFF_SIZE];
 char EVAL_LEN;
 
 void evaluateFormulaOnce() {
+	
 	char pos = -1;
 	short max_precedence = -1;
 	short relative_precedence = 0;
@@ -165,7 +167,6 @@ void evaluateFormulaOnce() {
 		output = LHS != RHS;
 	}
 	
-	
 	for (char i = 0; i <= LHS_pos - 1; i++) {
 		EVAL_BUFF[elen++] = EVAL_BUFF[i];
 	}
@@ -195,11 +196,4 @@ float evaluateFormula() {
 	}
 	
 	return journal_pop(0);
-}
-
-//Loads a formula from program memory ibwordo the EVAL_BUFF.
-bool loadFormula(ibword pos) {
-	//012345678
-	//5+(5+0*2)
-
 }
