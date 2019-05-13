@@ -1,6 +1,4 @@
-IdyllicBASIC is a variant of BASIC that encapsulates memory management.
-
-This means two things: 1. Idyllic scripts can be executed from program memory without loading them into RAM. 2. Idyllic scripts can store its variables within external memory devices. This includes anything from an external RAM to even a hard disk drive or an SD card.
+IdyllicBASIC is a variant of BASIC that encapsulates memory management. This means that Idyllic scripts can store its variables within external memory devices. This includes anything from an external RAM to even a hard disk drive or an SD card.
 
 Here is IdyllicBASIC being ran on an ATMega328P microcontroller using a 23LC1024 for external RAM.
 
@@ -8,7 +6,7 @@ Here is IdyllicBASIC being ran on an ATMega328P microcontroller using a 23LC1024
 
 Both of these things make Idyllic ideal for low-memory applications. The ATMega328P microcontroller, for example, has 2 KB of RAM. Normally, this would be not be enough to run BASIC scripts, as you could only fit a few lines of code into RAM.
 
-However, Idyllic can make use of external RAMs and program memory. The BASIC program does not need to be loaded into RAM to run, and all variables could be stored in an external RAM. The 23LC1024, for example, can store 1 megabit of RAM, which can be used for variable storage with Idyllic. Idyllic stores variables using 32-bit pointers, so it can handle external memory devices up to 4.2 gigabytes. It can easily be recompiled with 64-bit pointers if need be. Idyllic also stores these variables using AVL trees, so lookup times are fast.
+However, Idyllic can make use of external RAMs and program memory. The BASIC program does not need to be loaded into RAM to run, and all variables could be stored in an external RAM. The 23LC1024, for example, can store 1 megabit of RAM, which can be used for variable storage with Idyllic. Idyllic stores variables using 32-bit pointers, so it can handle external memory devices up to 4.2 gigabytes. It can easily be recompiled with 64-bit pointers if need be, or 16-bit pointers if you do not need to address more than 2^16 bytes. Idyllic also stores these variables using AVL trees, so lookup times are fast.
 
 Variables in Idyllic can be declared with the DIM command.
 ```
@@ -61,9 +59,23 @@ dim x = 0
 	x = x + 1
 if x < 10 then
 	goto @loop
-fi
+end
 ```
 This will print numbers 0 through 9.
+
+You can also use the "sub" command to create a subroutine. When the interpreter sees a subroutine, it will skip all code until it sees "end". You can then call the subroutine using "gosub" rather than "goto" which, just like "goto", will jump to the address of the subroutine, however, once it hits "end", it will return to where it was called from.
+
+```
+sub @mysub
+	print "Subroutine called."
+end
+
+print 1
+gosub @mysub
+print 2
+gosub @mysub
+print 3
+```
 
 The IF command can be used for conditional statements. The block of code between IF and FI will get executed only if the condition between IF and "then" is true.
 
@@ -71,7 +83,7 @@ The format of an IF command is:
 ```
 if LHS comparator RHS then
 	...
-fi
+end
 ```
 Valid comparators are:
 ```
@@ -116,7 +128,7 @@ dim i = 1
 	i = i + 1
 if i <= 10 then
 	goto @loop1
-fi
+end
 
 ;Print out the numbers.
 i = 1
@@ -125,7 +137,7 @@ i = 1
 	i = i + 1
 if i <= 10 then
 	goto @loop2
-fi
+end
 ```
 Arrays are 1-indexed. You can also see here that comments begin with a semicolon.
 
@@ -152,3 +164,5 @@ dim $str = "Hello!"
 $str[2] = "n"
 print $str
 ```
+
+
