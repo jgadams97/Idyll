@@ -106,6 +106,13 @@ Scripts in their own file can be ran using the "run" command.
 run "fibonacci.ib"
 ```
 
+For better performance, scripts can first be loaded into RAM before running them.
+```
+load "fibonacci.ib"
+run
+```
+
+
 If a number variable is declared with a size, it will become an array.
 ```
 dim x[10]
