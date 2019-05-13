@@ -3,6 +3,10 @@ char evalPos(ibword pos);
 ibword PROGRAM_LOAD_ADDR;
 char PROGRAM_IN_RAM;
 
+#ifdef ARDUINO
+	#include "edit.c"
+#endif
+
 //Returns -1 if line is too long.
 //	Otherwise returns offset.
 char copyStringIntoLineBuff(char *s) {
@@ -68,13 +72,50 @@ char evalReference(ibword addr) {
 		return ERROR_INVALID_KEY;
 	
 	//Check if the key exists.
-	if (findNode(key) != undefined)
-		return ERROR_KEY_EXISTS;
-	
+	ibword addr2 = findNode(key);
+	if (addr2 != (ibword)undefined) {
+		//Return an error if we're trying to
+		//	change the key's address.
+		if (readAdr(addr2) != addr)
+			return ERROR_KEY_EXISTS;
+		return 0;
+	}
 	//No issues. Create the key.
 	dimAdr(key, addr);
 	
 	return 0;
+}
+
+
+char evalSubroutine(ibword addr) {
+	char c = 0;
+	ibword pos = 0;
+	
+	//Skip over garbage whitespace.
+	c = LINE_BUFF[pos];
+	while (isWS(c)) {
+		c = LINE_BUFF[++pos];
+	}
+	
+	//Remove "sub".
+	c = LINE_BUFF[pos];
+	if (c != 'S' && c != 's')
+		return ERROR_SYNTAX;
+	LINE_BUFF[pos] = ' ';
+	c = LINE_BUFF[++pos];
+	if (c != 'U' && c != 'u')
+		return ERROR_SYNTAX;
+	LINE_BUFF[pos] = ' ';
+	c = LINE_BUFF[++pos];
+	if (c != 'B' && c != 'b')
+		return ERROR_SYNTAX;
+	LINE_BUFF[pos] = ' ';
+	if (isWS(c))
+		return ERROR_SYNTAX;
+	
+	char err = evalReference(addr);
+	if (err != 0) return err;
+	else return ERROR_SUBROUTINE;
 }
 
 //Evaluate an assignment.
@@ -85,7 +126,6 @@ char evalReference(ibword addr) {
 //		size before defining it.
 char evalAssignment(char *newstr) {
 
-	
 	char c;
 	char key[KEY_SIZE];
 	char keyPos = 0;
@@ -123,7 +163,7 @@ char evalAssignment(char *newstr) {
 	ibword addr;
 	if (newstr == NULL)
 		addr = findNode(key);
-	if (addr == undefined && newstr == NULL)
+	if (addr == (ibword)undefined && newstr == NULL)
 		return ERROR_KEY_NOT_FOUND;
 		
 	//Skip to equal sign.
@@ -155,12 +195,14 @@ char evalAssignment(char *newstr) {
 				numBuff[numBuffPos++] = c;
 			c = LINE_BUFF[++pos];
 		}
+		if (numBuffPos == 0)
+			return ERROR_SYNTAX;
 		numBuff[numBuffPos] = 0;
 		if (numIsVar) {
 			if (!verifyKey(numBuff))
 				return ERROR_SYNTAX;
 			ibword addrIndex = findNode(numBuff);
-			if (addrIndex == undefined)
+			if (addrIndex == (ibword)undefined)
 				return ERROR_KEY_NOT_FOUND;
 			index = (int)readNum(addrIndex);
 		} else {
@@ -273,37 +315,12 @@ char evalAssignment(char *newstr) {
 		return ERROR_SYNTAX;
 	}
 	
-	/*
-	int node_count = 1;
-	int disp_pos = 0;
-	for (int j = 0; j < AVL_END; j++) {
-		AVL_Node myNode = fetchNode(j);
-		printf("\nNode %i: \n\t", node_count++);
-		disp_pos = 0;
-		for (int i = j; i < j + sizeof(AVL_Node) + myNode.size; i++) {	
-			char ln = readRAM(i) >> 4;
-			char rn = readRAM(i) & 0xF;
-			if (ln >= 0 && ln <= 9) ln += '0';
-			else ln += 'A' - 10;
-			if (rn >= 0 && rn <= 9) rn += '0';
-			else rn += 'A' - 10;
-			printf("%c%c", ln, rn);
-			//printf("[%c]", readRAM(i));
-			if (disp_pos % 16 == 15) {
-				printf("\n\t");
-			}
-			disp_pos++;
-		}
-		j += sizeof(AVL_Node) + myNode.size - 1;
-	}
-	printf("\n");
-	*/
 	return 0;
 }
 
 //Evaluate a conditional.
 //	0	No error.
-char evalUnconditional() {
+char evalEnd() {
 	char c;
 	ibword pos = 0;
 	
@@ -314,10 +331,13 @@ char evalUnconditional() {
 	}
 	
 	//Syntax error.
-	if (isEOL(c) || (c != 'f' && c != 'F'))
+	if (isEOL(c) || (c != 'E' && c != 'e'))
 		return ERROR_SYNTAX;
 	c = LINE_BUFF[++pos];
-	if (isEOL(c) || (c != 'i' && c != 'i'))
+	if (isEOL(c) || (c != 'N' && c != 'n'))
+		return ERROR_SYNTAX;
+	c = LINE_BUFF[++pos];
+	if (isEOL(c) || (c != 'D' && c != 'd'))
 		return ERROR_SYNTAX;
 		
 	//Skip over white space.
@@ -531,7 +551,6 @@ char evalConditional() {
 	
 	return ERROR_CONDITIONAL_UNTRIGGERED;
 	
-	
 }
 //Evaluate a declaration.
 //	0	No error.
@@ -589,7 +608,7 @@ char evalDeclaration() {
 		return ERROR_INVALID_TYPE;
 	
 	//Check to see if variable already exists.
-	if (findNode(key) != undefined)
+	if (findNode(key) != (ibword)undefined)
 		return ERROR_KEY_EXISTS;
 	
 	//Syntax error.
@@ -606,13 +625,36 @@ char evalDeclaration() {
 		hasArray = 1;
 		
 		//Read in size.
+		char numIsVar = 0;
+		char isOnlyNum = 1;
 		c = LINE_BUFF[++pos];
-		while (isNum(c) && !isEOL(c)) {
-			numBuff[numPos++] = c;
+		while (c != ']' && !isEOL(c)) {
+			if (isEOL(c))
+				return ERROR_SYNTAX;
+			if (isAlpha(c))
+				numIsVar = 1;
+			if (!isNum(c) && !isWS(c))
+				isOnlyNum = 0;
+			if (!isWS(c))
+				numBuff[numPos++] = c;
 			c = LINE_BUFF[++pos];
 		}
+		if (numPos == 0)
+			return ERROR_SYNTAX;
 		numBuff[numPos] = 0;
-		size = atoi(numBuff);
+		if (numIsVar) {
+			if (!verifyKey(numBuff))
+				return ERROR_SYNTAX;
+			ibword addrIndex = findNode(numBuff);
+			if (addrIndex == (ibword)undefined)
+				return ERROR_KEY_NOT_FOUND;
+			size = (int)readNum(addrIndex);
+		} else {
+			if (isOnlyNum)
+				size = atoi(numBuff);
+			else
+				return ERROR_SYNTAX;
+		}
 		arrayEnd = pos;
 		
 		//Syntax error.
@@ -664,7 +706,6 @@ char evalDeclaration() {
 		} else 
 			dimNum(key, 0);
 	}
-	
 	
 	if (containsAssignment) {
 		//Remove brackets.
@@ -745,7 +786,6 @@ char evalCommand() {
 		c = LINE_BUFF[++pos];
 	}
 	argsStart[0] = pos;
-	
 	//Get end of command.
 	while (!isWS(c) && !isEOL(c)) {
 		if (!isAlpha(c) && c != '$')
@@ -768,25 +808,31 @@ char evalCommand() {
 		}
 		argsStart[arg] = pos;
 		
+		//Keep track if it only contains white space.
+		char onlyWhiteSpace = 1;
+		
 		//Get end of argument.
 		while ( (c != ',' || isInQuotes) && !isEOL(c) ) {
 			if (c == '\"') {
 				isInQuotes = !isInQuotes;
 			}
+			if (!isWS(c))
+				onlyWhiteSpace = 0;
 			c = LINE_BUFF[++pos];
 		}
 		argsSize[arg] = pos - argsStart[arg];
 		
-		//Update argument.
-		arg++;
+		//Update argument only if not only white space.
+		if (!onlyWhiteSpace)
+			arg++;
 	}
 	
 	//Check for arrow.
 	bool hasArrow = false;
 	if (arg >= 2) {
-		if (LINE_BUFF[argsStart[arg - 2]] == '=' &&
-			LINE_BUFF[argsStart[arg - 2]] == '>') {
-			arg -= 2;
+		if (LINE_BUFF[argsStart[arg - 1]] == '=' &&
+			LINE_BUFF[argsStart[arg - 1] + 1] == '>') {
+			arg--;
 		}
 		
 		c = LINE_BUFF[--pos];
@@ -842,7 +888,7 @@ char evalCommand() {
 			
 		//Check if variable exists.
 		outputAddress = findNode(outputKey);
-		if (outputAddress == undefined)
+		if (outputAddress == (ibword)undefined)
 			return ERROR_KEY_NOT_FOUND;
 		
 	}
@@ -871,7 +917,8 @@ char identifyLineType() {
 	bool checkedM = false;
 	bool isDeclaration = true;
 	bool isConditional = true;
-	bool isUnconditional = true;
+	bool isEnd = true;
+	bool isSub = true;
 	char c = LINE_BUFF[pos];
 	while (isWS(c) && !isEOL(c)) {
 		c = LINE_BUFF[++pos];
@@ -885,20 +932,22 @@ char identifyLineType() {
 		isDeclaration = false;
 	if (c != 'I' && c != 'i')
 		isConditional = false;
-	if (c != 'f' && c != 'f')
-		isUnconditional = false;
+	if (c != 'E' && c != 'e')
+		isEnd = false;
+	if (c != 'S' && c != 's')
+		isSub = false;
 	c = LINE_BUFF[++pos];
 	if (c != 'I' && c != 'i')
 		isDeclaration = false;
 	if (c != 'F' && c != 'f')
 		isConditional = false;
-	if (c != 'I' && c != 'i')
-		isUnconditional = false;
+	if (c != 'N' && c != 'n')
+		isEnd = false;
+	if (c != 'U' && c != 'u')
+		isSub = false;
 	char nc = LINE_BUFF[pos + 1];
 	if (isConditional && (isWS(nc) || isEOL(nc)))
 		return TYPE_CONDITIONAL;
-	if (isUnconditional && (isWS(nc) || isEOL(nc)))
-		return TYPE_UNCONDITIONAL;
 	while (isAlphaNum(c) && !isEOL(c)) {
 		c = LINE_BUFF[++pos];
 		
@@ -906,10 +955,19 @@ char identifyLineType() {
 			nc = LINE_BUFF[pos + 1];
 			if ((c != 'M' && c != 'm') || !isWS(nc))
 				isDeclaration = false;
+			if ((c != 'D' && c != 'd'))
+				isEnd = false;
+			if ((c != 'B' && c != 'b'))
+				isSub = false;
 		}
 		checkedM = true;
 	}
-	if (isDeclaration && c != '=') return TYPE_DECLARATION;
+	if (isDeclaration && c != '=')
+		return TYPE_DECLARATION;
+	if (isEnd && c != '=')
+		return TYPE_END;
+	if (isSub && c != '=')
+		return TYPE_SUBROUTINE;
 	if (isEOL(c)) return TYPE_COMMAND;
 	while (isWS(c) && !isEOL(c)) {
 		c = LINE_BUFF[++pos];
@@ -925,6 +983,7 @@ char identifyLineType() {
 //Evaluates a single line at a position.
 //	The addr should be the address of the next line.
 char evalLine(ibword pos, ibword addr) {
+
 	char type = identifyLineType();
 	char ret = 0;
 	if (type == TYPE_DECLARATION) {
@@ -937,8 +996,10 @@ char evalLine(ibword pos, ibword addr) {
 		ret = evalCommand();
 	} else if (type == TYPE_CONDITIONAL) {
 		ret = evalConditional();
-	} else if (type == TYPE_UNCONDITIONAL) {
-		ret = evalUnconditional();
+	} else if (type == TYPE_END) {
+		ret = evalEnd();
+	} else if (type == TYPE_SUBROUTINE) {
+		ret = evalSubroutine(addr);
 	}
 	return ret;
 }
@@ -951,10 +1012,10 @@ void printError(char e) {
 			printString("Syntax error");
 			break;
 		case 2:
-			printString("Variable not found");
+			printString("Not found");
 			break;
 		case 3:
-			printString("Invalid variable name");
+			printString("Invalid name");
 			break;
 		case 4:
 			printString("Variable exists");
@@ -966,7 +1027,7 @@ void printError(char e) {
 			printString("Invalid type");
 			break;
 		case 7:
-			printString("Invalid argument count");
+			printString("Invalid arguments");
 			break;
 		case 10:
 			printString("Invalid comparison");
@@ -975,7 +1036,7 @@ void printError(char e) {
 			printString("Missing THEN");
 			break;
 		case ERROR_STRING_TOO_LARGE:
-			printString("Invalid dimensions");
+			printString("Invalid size");
 			break;
 		case ERROR_UNKNOWN_COMMAND:
 			printString("Unknown command");
@@ -983,36 +1044,69 @@ void printError(char e) {
 		case ERROR_FILE_NOT_FOUND:
 			printString("File not found");
 			break;
+		case ERROR_STACK:
+			printString("Stack error");
+			break;
 		default:
-			printString("This command cannot be executed in DIRECT mode");
+			printString("Invalid mode");
 			break;
 	}
 	
 }
 
 //Evaluates a program at position.
+#define subStackSize 10
+#ifdef ARDUINO
+ibword subStack[subStackSize];
+char subStackPos = 0;
+char skipEnd[subStackSize];
+char skipEndPos = 0;
+#endif
 char evalPos(ibword pos) {
 	ibword size;
 	char eof = 10;
-	ibword skipMode = 0;
+	char skipMode = 0;
 	ibword lineNum = 0;
-	
+	#ifdef DESKTOP
+	ibword subStack[subStackSize];
+	char subStackPos = 0;
+	char skipEnd[subStackSize];
+	char skipEndPos = 0;
+	#endif
+	skipEnd[0] = 0;
 	while (eof == 10) {
 		lineNum++;
 		size = copyFileIntoLineBuff(pos);
-		if (size == -1) return ERROR_SYNTAX;
+		if (size == (ibword)-1) return ERROR_SYNTAX;
 		eof = PROGRAM_IN_RAM ? readRAM(pos+size-1) : readFileOnDevice(pos+size-1);
 		char err;
+		char type = identifyLineType();
 		if (skipMode > 0) {
-			char type = identifyLineType();
-			if (type == TYPE_UNCONDITIONAL) {
+			if (type == TYPE_END) {
 				skipMode--;
-			} else if (type == TYPE_CONDITIONAL) {
+			} else if (type == TYPE_CONDITIONAL || type == TYPE_SUBROUTINE) {
 				skipMode++;
 			}
 			err = 0;
-		} else {
+		} else if (skipMode != (char)-1) {
 			err = evalLine(pos, pos + size);
+			if (type == TYPE_END) {
+				if (skipEnd[skipEndPos] > 0) {
+					skipEnd[skipEndPos]--;
+				} else {
+					if (subStackPos == 0)
+						err = ERROR_STACK;
+					else {
+						subStackPos--;
+						skipEndPos--;
+						pos = subStack[subStackPos];
+						eof = 10;
+						continue;
+					}
+				}
+			} else if (type == TYPE_CONDITIONAL && err == ERROR_CONDITIONAL_UNTRIGGERED) {
+				skipEnd[skipEndPos]++;
+			}
 		}
 		//Not an actual error.
 		if (err == ERROR_CONDITIONAL_UNTRIGGERED)
@@ -1025,8 +1119,21 @@ char evalPos(ibword pos) {
 			if (err == ERROR_CHANGE_ADDRESS) {
 				pos = (ibword)evaluateFormula();
 				eof = 10;
+				skipEnd[skipEndPos] = 0;
 				continue;
-			} else if (err == ERROR_CONDITIONAL_TRIGGERED) {
+			} else if (err == ERROR_CHANGE_ADDRESS_CALL) {
+				if (subStackPos == subStackSize) {
+					err = ERROR_STACK;
+					skipMode = -1;
+				}
+				subStack[subStackPos++] = pos + size;
+				pos = (ibword)evaluateFormula();
+				skipEnd[++skipEndPos] = 0;
+				eof = 10;
+				continue;
+			} else if (err == ERROR_CONDITIONAL_TRIGGERED || err == ERROR_SUBROUTINE) {
+				skipMode = 1;
+			} else if (err == ERROR_SUBROUTINE) {
 				skipMode = 1;
 			} else {
 				printError(err);
@@ -1039,10 +1146,11 @@ char evalPos(ibword pos) {
 		pos += size;
 	}
 	
-	if (skipMode != 0) {
-		printString("Missing FI.\n");
+	if (skipMode != 0 || skipEnd[skipEndPos] != 0) {
+		printString("Missing END.\n");
 		return 50;
 	}
+	
 	return 0;
 }
 

@@ -1,7 +1,10 @@
+
+#ifdef DESKTOP
 //Quit command.
 if (compareIgnoreCase(command, "quit")) {
 	return ERROR_HALTING;
 }
+#endif
 
 if (compareIgnoreCase(command, "print")) {
 	//Verify number of arguments.
@@ -54,6 +57,23 @@ if (compareIgnoreCase(command, "goto")) {
 	return 0;
 }
 
+//GOSUB Command.
+if (compareIgnoreCase(command, "gosub")) {
+	//Verify number of arguments.
+	if (arg != 2)
+		return ERROR_ARGUMENT_COUNT;
+		
+	if (argsType[1] == TYPE_NUM) {
+		char err = copyFormulaIntoEvalBuff(argsStart[1], argsSize[1]);
+		if (err != 0) return err;
+		return ERROR_CHANGE_ADDRESS_CALL;
+	} else {
+		return ERROR_INVALID_TYPE;
+	}
+	
+	return 0;
+}
+
 //FREE RAM Command.
 if (compareIgnoreCase(command, "free")) {
 	
@@ -63,7 +83,7 @@ if (compareIgnoreCase(command, "free")) {
 	
 	//Needs output.
 	if (hasArrow) {
-		if (!isAlphaNum(outputKey[0]))
+		if (!isAlpha(outputKey[0]))
 			return ERROR_INVALID_TYPE;
 		writeNum(outputAddress, sizeRAM() - AVL_END);
 	} else {
@@ -90,10 +110,12 @@ if (compareIgnoreCase(command, "$read")) {
 		LINE_BUFF[pos++] = '\"';
 		char c = readChar();
 		while (c != '\n') {
-			if (c != -1 && c != 0 && c != 0x08) {
+			if (c != (char)-1 && c != 0 && c != 0x08) {
 				LINE_BUFF[pos++] = c == '\"' ? '\'' : c;
 			} else if (c == 0x08 && pos != 0) {
+				#ifdef ARDUINO
 				backspace();
+				#endif
 				pos--;
 			}
 			c = readChar();
@@ -113,6 +135,7 @@ if (compareIgnoreCase(command, "$read")) {
 	return 0;
 }
 
+#ifdef DESKTOP
 //Runs a file.
 if (compareIgnoreCase(command, "run")) {
 	if (arg != 2 && arg != 1)
@@ -146,7 +169,20 @@ if (compareIgnoreCase(command, "run")) {
 	}
 	return 0;
 }
+#endif
 
+#ifdef ARDUINO
+
+//Runs a file.
+if (compareIgnoreCase(command, "run")) {
+	if (arg != 1)
+		return ERROR_ARGUMENT_COUNT;
+	
+	PROGRAM_IN_RAM = 1;
+	evalPos(PROGRAM_LOAD_ADDR);
+	return 0;
+}
+#endif
 //Loads a file into RAM.
 if (compareIgnoreCase(command, "load")) {
 
@@ -161,6 +197,9 @@ if (compareIgnoreCase(command, "load")) {
 	if (err != 0) return err;
 	char c;
 	while (c = readCharFromEvalBuff()) {
+		#ifdef ARDUINO
+		if (c >= 'a' && c <= 'z') c -= 'a' - 'A';
+		#endif
 		if (fPos == 19)
 			return ERROR_INVALID_OPTION;
 		fileName[fPos++] = c;
@@ -188,6 +227,228 @@ if (compareIgnoreCase(command, "load")) {
 	return 0;
 }
 
+#ifdef ARDUINO
+
+//Loads a file into RAM.
+if (compareIgnoreCase(command, "edit")) {
+
+	if (arg != 2)
+		return ERROR_ARGUMENT_COUNT;
+		
+	char fileName[9];
+	char fPos = 0;
+	if (argsType[1] != TYPE_STR)
+		return ERROR_INVALID_TYPE;
+	char err = copyStringIntoEvalBuff(argsStart[1], argsSize[1]);
+	if (err != 0) return err;
+	char c;
+	while (c = readCharFromEvalBuff()) {
+		if (c >= 'a' && c <= 'z') c -= 'a' - 'A';
+		if (fPos == 8)
+			return ERROR_INVALID_OPTION;
+		fileName[fPos++] = c;
+	}
+	fileName[fPos] = 0;
+	
+	ibword newSize = -1;
+	if (!fileExistsOnDevice(fileName)) {
+		newSize = linesEditor(0, 4, 20);
+	} else {
+		openFileOnDevice(fileName);
+		ibword s = sizeOfFileOnDevice();
+		unsigned short x = 0, y = 0;
+		PROGRAM_LOAD_ADDR = sizeRAM() - s - 1;
+		printString("Loading ");
+		printInt(s);
+		printString(" bytes.\n");
+		for (ibword i = 0; i < s; i++) {
+			char rc = readFileOnDevice(i);
+			if (rc == '\n') {
+				writeRAM(x + y * LINE_BUFF_MAX, 0);
+				x = 0;
+				y++;
+			} else {
+				writeRAM(x + y * LINE_BUFF_MAX, rc);
+				x++;
+			}
+		}
+		writeRAM(y * LINE_BUFF_MAX, 0);
+		printString("Done.\n");
+		closeFileOnDevice();
+		newSize = linesEditor(y, 4, 20);
+	}
+	
+	if (newSize != -1) {
+		File oldFile = openFile(NULL, fileName);
+		if (oldFile.status == 0)
+			deleteFile(&oldFile);
+		if (newSize > 4) {
+			printString("Saving...\n");
+			File newFile = createFile(newSize + 1, NULL, fileName);
+			seekFile(&newFile, 0);
+			unsigned short row = 0;
+			unsigned short col = 0;
+			for (unsigned short i = 0; i < newSize; i++) {
+				char c = readRAM(row * LINE_BUFF_MAX + col);
+				if (c == 0) {
+					writeFile(&newFile, '\n');
+					col = 0;
+					row++;
+				} else {
+					writeFile(&newFile, c);
+					col++;
+				}
+			}
+			writeFile(&newFile, 0);
+			printString("Done.\n");
+		}
+	}
+		
+	AVL_ROOT = 0;
+	AVL_END = 0;
+	return 0;
+}
+
+if (compareIgnoreCase(command, "files")) {
+	if (arg != 1)
+		return ERROR_ARGUMENT_COUNT;
+
+	char name[20];
+	char fpos = 0;
+	while (listFilesInFolder(NULL, name)) {
+		printString(name);
+		printString("...");
+		File f = openFile(NULL, name);
+		printFloat(f.size);
+		fpos++;
+		if (fpos == 4) {
+			readChar();
+			backspace();
+			fpos = 0;
+		}
+		printString("\n");
+	}
+	return 0;
+}
+
+
+//Loads a file into RAM.
+if (compareIgnoreCase(command, "delete")) {
+
+	if (arg != 2)
+		return ERROR_ARGUMENT_COUNT;
+		
+	char fileName[20];
+	char fPos = 0;
+	if (argsType[1] != TYPE_STR)
+		return ERROR_INVALID_TYPE;
+	char err = copyStringIntoEvalBuff(argsStart[1], argsSize[1]);
+	if (err != 0) return err;
+	char c;
+	while (c = readCharFromEvalBuff()) {
+		if (c >= 'a' && c <= 'z') c -= 'a' - 'A';
+		if (fPos == 19)
+			return ERROR_INVALID_OPTION;
+		fileName[fPos++] = c;
+	}
+	fileName[fPos] = 0;
+	
+	if (!fileExistsOnDevice(fileName))
+		return ERROR_FILE_NOT_FOUND;
+		
+	File file = openFile(NULL, fileName);
+	deleteFile(&file);
+	
+	return 0;
+}
+
+if (compareIgnoreCase(command, "random")) {
+	if (arg != 1)
+		return ERROR_ARGUMENT_COUNT;
+	
+	unsigned short seed = KB_RANDOM * 49627 + 49627;
+	float rnd = (float)seed / (float)65535;
+	
+	if (hasArrow) {
+		if (!isAlpha(outputKey[0]))
+			return ERROR_INVALID_TYPE;
+		writeNum(outputAddress, rnd);
+	} else {
+		printFloat(rnd);
+		printString("\n");
+	}
+	
+	return 0;
+}
+
+//Clear screen.
+if (compareIgnoreCase(command, "cls")) {
+	if (arg != 1)
+		return ERROR_ARGUMENT_COUNT;
+	lcdClear();
+	return 0;
+}
+
+#endif
+
+
+if (compareIgnoreCase(command, "floor")) {
+	if (arg != 2)
+		return ERROR_ARGUMENT_COUNT;
+	
+	if (argsType[1] != TYPE_NUM)
+		return ERROR_INVALID_TYPE;
+		
+	char err = copyFormulaIntoEvalBuff(argsStart[1], argsSize[1]);
+	if (err != 0) return err;
+	
+	float num = (unsigned long)evaluateFormula();
+	
+	if (hasArrow) {
+		if (!isAlpha(outputKey[0]))
+			return ERROR_INVALID_TYPE;
+		writeNum(outputAddress, num);
+	} else {
+		printFloat(num);
+		printString("\n");
+	}
+	
+	return 0;
+}
+
+
+//Converts a string into a number.
+if (compareIgnoreCase(command, "value")) {
+
+	if (arg != 2)
+		return ERROR_ARGUMENT_COUNT;
+		
+	char str[21];
+	char strPos = 0;
+	if (argsType[1] != TYPE_STR)
+		return ERROR_INVALID_TYPE;
+	char err = copyStringIntoEvalBuff(argsStart[1], argsSize[1]);
+	if (err != 0) return err;
+	char c;
+	while (c = readCharFromEvalBuff()) {
+		if (strPos == 20) break;
+		str[strPos++] = c;
+	}
+	str[strPos] = 0;
+	float val = atof(str);
+	
+	if (hasArrow) {
+		if (!isAlpha(outputKey[0]))
+			return ERROR_INVALID_TYPE;
+		writeNum(outputAddress, val);
+	} else {
+		printFloat(val);
+		printString("\n");
+	}
+	
+	return 0;
+}
+
 //Clears variables.
 if (compareIgnoreCase(command, "clear")) {
 	if (arg != 1)
@@ -197,6 +458,7 @@ if (compareIgnoreCase(command, "clear")) {
 	return 0;
 }
 
+#ifndef ARDUINO
 //Peeks at the RAM.
 if (compareIgnoreCase(command, "peek")) {
 
@@ -210,12 +472,9 @@ if (compareIgnoreCase(command, "peek")) {
 	if (pos < 0 || pos >= sizeRAM())
 		return ERROR_OUT_OF_BOUNDS;
 	ibword pos = (ibword)evaluateFormula();
-	/*float num;
-	char *ptr = (char*)(&num);
-	for (int i = 0; i < sizeof(float); i++)
-		ptr[i] = readRAM(pos + i);*/
+	
 	if (hasArrow) {
-		if (!isAlphaNum(outputKey[0]))
+		if (!isAlpha(outputKey[0]))
 			return ERROR_INVALID_TYPE;
 		writeNum(outputAddress, readRAM(pos));
 	} else {
@@ -246,14 +505,10 @@ if (compareIgnoreCase(command, "poke")) {
 	if (err != 0) return err;
 	b = (char)evaluateFormula();
 	
-	if (a < AVL_END || a >= sizeRAM()/* - sizeof(float)*/)
+	if (a < AVL_END || a >= sizeRAM())
 		return ERROR_OUT_OF_BOUNDS;
 	
-	/*char *ptr = (char*)(&b);
-	for (int i = 0; i < sizeof(float); i++)
-		writeRAM(a + i, ptr[i]);*/
 	writeRAM(a, b);
 	return 0;
 }
-
-
+#endif

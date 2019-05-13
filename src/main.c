@@ -14,7 +14,7 @@ void main(int argc, char **args) {
 		}
 	}
 	char userInput[LINE_BUFF_MAX + 1];
-	printString("IdyllicBASIC v0.6\n");
+	printString("IdyllicBASIC v0.7\n");
 	while (1) {
 		printString("] ");
 		char pos = 0;
