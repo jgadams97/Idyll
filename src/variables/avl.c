@@ -1,4 +1,4 @@
-ibword unistrcmp(char *str_a, char *str_b) {
+signed short unistrcmp(char *str_a, char *str_b) {
 	for (ibword i = 0;; i++) {
 		if (str_a[i] == 0 && str_b[i] == 0) {
 			return 0;
@@ -32,7 +32,7 @@ void unimemcpy(void *vptr_a, void *vptr_b, ibword size) {
 	}
 }
 
-void ibwordToString(char *str, ibword num) {
+void ibwordToString(char *str, signed long num) {
 	char pos = 0;
 	bool negative = false;
 	if (num == 0) {
@@ -61,23 +61,21 @@ void ibwordToString(char *str, ibword num) {
 
 
 void floatToString(char *str, float num) {
-	ibwordToString(str, (ibword)num);
+	ibwordToString(str, (signed long)num);
 	char pos = -1;
 	while (str[++pos] != 0);
-	num = num - (ibword)num;
+	num = num - (signed long)num;
 	if (num < 0) num *= -1;
 	ibword places = 0;
 	if (num != 0) {
 		str[pos++] = '.';
 		while (num != 0) {
 			num *= 10;
-			str[pos++] = (ibword)num + '0';
-			num = num - (ibword)num;
+			str[pos++] = (signed long)num + '0';
+			num = num - (signed long)num;
 			places++;
 			if (places == 7) break;
 		}
-		
-		
 		str[pos] = 0;
 	}
 }
@@ -193,12 +191,34 @@ AVL_Node fetchNode(ibword pos) {
 	return ret;
 }
 
+//Fetch a node from RAM.
+AVL_Dangling fetchDangling(ibword pos) {
+
+	char buff[sizeof(AVL_Dangling)];
+	for (char i = 0; i < sizeof(AVL_Dangling); i++) {
+		buff[i] = readRAM(i + pos);
+	}
+	
+	AVL_Dangling ret;
+	unimemcpy(&ret, buff, sizeof(AVL_Dangling));
+	return ret;
+}
+
 //Store a node ibwordo RAM.
 void storeNode(AVL_Node *n) {
 	char buff[sizeof(AVL_Node)];
 	unimemcpy(buff, n, sizeof(AVL_Node));
 	for (char i = 0; i < sizeof(AVL_Node); i++) {
 		writeRAM(i + n->address, buff[i]);
+	}
+}
+
+//Store a node ibwordo RAM.
+void storeDangling(AVL_Dangling *n, ibword address) {
+	char buff[sizeof(AVL_Dangling)];
+	unimemcpy(buff, n, sizeof(AVL_Dangling));
+	for (char i = 0; i < sizeof(AVL_Dangling); i++) {
+		writeRAM(i + address, buff[i]);
 	}
 }
 
@@ -218,9 +238,9 @@ ibword pushNode(AVL_Node *n) {
 
 void updateHeight(AVL_Node *node) {
 	ibword leftHeight, rightHeight, height;
-	if (node->left == undefined) leftHeight = 0;
+	if (node->left == (ibword)undefined) leftHeight = 0;
 	else leftHeight = fetchNode(node->left).height;
-	if (node->right == undefined) rightHeight = 0;
+	if (node->right == (ibword)undefined) rightHeight = 0;
 	else rightHeight = fetchNode(node->right).height;
 	if (leftHeight > rightHeight) {
 		node->height = leftHeight + 1;
@@ -233,7 +253,7 @@ void updateHeight(AVL_Node *node) {
 void updateHeights(AVL_Node node) {
 	while (1) {
 		updateHeight(&node);
-		if (node.parent != undefined) {
+		if (node.parent != (ibword)undefined) {
 			node = fetchNode(node.parent);
 			continue;
 		}
@@ -245,17 +265,17 @@ void caseLeftLeft(AVL_Node z) {
 	//Fetch nodes.
 	AVL_Node parent;
 	parent.address = undefined;
-	if (z.parent != undefined) parent = fetchNode(z.parent);
+	if (z.parent != (ibword)undefined) parent = fetchNode(z.parent);
 	
 	AVL_Node y = fetchNode(z.left);
 	AVL_Node T3;
-	T3.address = undefined;
-	if (y.right != undefined) {
+	T3.address = (ibword)undefined;
+	if (y.right != (ibword)undefined) {
 		T3 = fetchNode(y.right);
 	}
 	
 	//Update children.
-	if (parent.address != undefined) {
+	if (parent.address != (ibword)undefined) {
 		if (parent.left == z.address) {
 			parent.left = y.address;
 		} else {
@@ -271,17 +291,17 @@ void caseLeftLeft(AVL_Node z) {
 	T3.parent = z.address;
 	
 	//Store nodes.
-	if (parent.address != undefined) {
+	if (parent.address != (ibword)undefined) {
 		storeNode(&parent);
 	}
 	storeNode(&y);
 	storeNode(&z);
-	if (T3.address != undefined) {
+	if (T3.address != (ibword)undefined) {
 		storeNode(&T3);
 	}
 	
 	//Update global root.
-	if (y.parent == undefined) {
+	if (y.parent == (ibword)undefined) {
 		AVL_ROOT = y.address;
 	}
 	
@@ -294,17 +314,17 @@ void caseRightRight(AVL_Node z) {
 	//Fetch nodes.
 	AVL_Node parent;
 	parent.address = undefined;
-	if (z.parent != undefined) parent = fetchNode(z.parent);
+	if (z.parent != (ibword)undefined) parent = fetchNode(z.parent);
 	
 	AVL_Node y = fetchNode(z.right);
 	AVL_Node T2;
 	T2.address = undefined;
-	if (y.left != undefined) {
+	if (y.left != (ibword)undefined) {
 		T2 = fetchNode(y.left);
 	}
 	
 	//Update children.
-	if (parent.address != undefined) {
+	if (parent.address != (ibword)undefined) {
 		if (parent.left == z.address) {
 			parent.left = y.address;
 		} else {
@@ -320,17 +340,17 @@ void caseRightRight(AVL_Node z) {
 	T2.parent = z.address;
 	
 	//Store nodes.
-	if (parent.address != undefined) {
+	if (parent.address != (ibword)undefined) {
 		storeNode(&parent);
 	}
 	storeNode(&y);
 	storeNode(&z);
-	if (T2.address != undefined) {
+	if (T2.address != (ibword)undefined) {
 		storeNode(&T2);
 	}
 	
 	//Update global root.
-	if (y.parent == undefined) {
+	if (y.parent == (ibword)undefined) {
 		AVL_ROOT = y.address;
 	}
 	
@@ -344,22 +364,22 @@ void caseLeftRight(AVL_Node z) {
 	//Fetch nodes.
 	AVL_Node parent;
 	parent.address = undefined;
-	if (z.parent != undefined) parent = fetchNode(z.parent);
+	if (z.parent != (ibword)undefined) parent = fetchNode(z.parent);
 	
 	AVL_Node y = fetchNode(z.left);
 	AVL_Node x = fetchNode(y.right);
 	AVL_Node T2, T3;
 	T2.address = undefined;
 	T3.address = undefined;
-	if (x.left != undefined) {
+	if (x.left != (ibword)undefined) {
 		T2 = fetchNode(x.left);
 	}
-	if (x.right != undefined) {
+	if (x.right != (ibword)undefined) {
 		T3 = fetchNode(x.right);
 	}
 
 	//Update children.
-	if (parent.address != undefined) {
+	if (parent.address != (ibword)undefined) {
 		if (parent.left == z.address) {
 			parent.left = x.address;
 		} else {
@@ -380,21 +400,21 @@ void caseLeftRight(AVL_Node z) {
 	
 	
 	//Store nodes.
-	if (parent.address != undefined) {
+	if (parent.address != (ibword)undefined) {
 		storeNode(&parent);
 	}
 	storeNode(&x);
 	storeNode(&y);
 	storeNode(&z);
-	if (T2.address != undefined) {
+	if (T2.address != (ibword)undefined) {
 		storeNode(&T2);
 	}
-	if (T3.address != undefined) {
+	if (T3.address != (ibword)undefined) {
 		storeNode(&T3);
 	}
 	
 	//Update global root.
-	if (x.parent == undefined) {
+	if (x.parent == (ibword)undefined) {
 		AVL_ROOT = x.address;
 	}
 	
@@ -409,22 +429,22 @@ void caseRightLeft(AVL_Node z) {
 	//Fetch nodes.
 	AVL_Node parent;
 	parent.address = undefined;
-	if (z.parent != undefined) parent = fetchNode(z.parent);
+	if (z.parent != (ibword)undefined) parent = fetchNode(z.parent);
 	
 	AVL_Node y = fetchNode(z.right);
 	AVL_Node x = fetchNode(y.left);
 	AVL_Node T2, T3;
 	T2.address = undefined;
 	T3.address = undefined;
-	if (x.left != undefined) {
+	if (x.left != (ibword)undefined) {
 		T2 = fetchNode(x.left);
 	}
-	if (x.right != undefined) {
+	if (x.right != (ibword)undefined) {
 		T3 = fetchNode(x.right);
 	}
 	
 	//Update children.
-	if (parent.address != undefined) {
+	if (parent.address != (ibword)undefined) {
 		if (parent.left == z.address) {
 			parent.left = x.address;
 		} else {
@@ -444,21 +464,21 @@ void caseRightLeft(AVL_Node z) {
 	T3.parent = y.address;
 	
 	//Store nodes.
-	if (parent.address != undefined) {
+	if (parent.address != (ibword)undefined) {
 		storeNode(&parent);
 	}
 	storeNode(&x);
 	storeNode(&y);
 	storeNode(&z);
-	if (T2.address != undefined) {
+	if (T2.address != (ibword)undefined) {
 		storeNode(&T2);
 	}
-	if (T3.address != undefined) {
+	if (T3.address != (ibword)undefined) {
 		storeNode(&T3);
 	}
 	
 	//Update global root.
-	if (x.parent == undefined) {
+	if (x.parent == (ibword)undefined) {
 		AVL_ROOT = x.address;
 	}
 	
@@ -472,9 +492,9 @@ void caseRightLeft(AVL_Node z) {
 //Calculate the balance factor of a node.
 ibword getNodeBalance(AVL_Node *node) {
 	ibword leftHeight, rightHeight;
-	if (node->left == undefined) leftHeight = 0;
+	if (node->left == (ibword)undefined) leftHeight = 0;
 	else leftHeight = fetchNode(node->left).height;
-	if (node->right == undefined) rightHeight = 0;
+	if (node->right == (ibword)undefined) rightHeight = 0;
 	else rightHeight = fetchNode(node->right).height;
 	return leftHeight - rightHeight;
 }
@@ -498,17 +518,17 @@ ibword insertNode(AVL_Node *node) {
 	
 	//Go to the bottom.
 	while (1) {
-		ibword comparison = unistrcmp(node->key, root.key);
+		signed short comparison = unistrcmp(node->key, root.key);
 		if (comparison == 0) {
 			return undefined;
 		}
 		
 		//Move down the tree.
-		if (comparison > 0 && root.right != undefined) {
+		if (comparison > 0 && root.right != (ibword)undefined) {
 			root = fetchNode(root.right);
 			height++;
 			continue;
-		} else if (comparison < 0 && root.left != undefined) {
+		} else if (comparison < 0 && root.left != (ibword)undefined) {
 			root = fetchNode(root.left);
 			height++;
 			continue;
@@ -522,15 +542,14 @@ ibword insertNode(AVL_Node *node) {
 	}
 	
 	//Go back up to the top.
-	AVL_Node pnode;
-	ibword balance, pbalance;
+	short balance, pbalance;
 	for (ibword i = 1; i <= height + 1; i++) {
 		if (i + 1 > root.height) {
 			root.height = i + 1;
 			storeNode(&root);
 		}
 		//Check if the balance is off.
-		if (unbalanced.address == undefined) {
+		if (unbalanced.address == (ibword)undefined) {
 			pbalance = balance;
 			balance = getNodeBalance(&root);
 			if (balance >= 2 || balance <= -2) {
@@ -538,24 +557,16 @@ ibword insertNode(AVL_Node *node) {
 			}
 		}
 		
-		if (root.parent == undefined) break; 
+		if (root.parent == (ibword)undefined) break; 
 		root = fetchNode(root.parent);
 	}
 	
 	//Fix balancing.
-	if (unbalanced.address != undefined) {
-		/*printf("UNBALANCED: %u\n", unbalanced.address);
-		
-		if (balance > 0 && pbalance > 0) printf("\tLL\n");
-		if (balance > 0 && pbalance < 0) printf("\tLR\n");
-		if (balance < 0 && pbalance < 0) printf("\tRR\n");
-		if (balance < 0 && pbalance > 0) printf("\tRL\n");*/
-		
+	if (unbalanced.address != (ibword)undefined) {
 		if (balance > 0 && pbalance > 0) caseLeftLeft(unbalanced);
 		if (balance > 0 && pbalance < 0) caseLeftRight(unbalanced);
 		if (balance < 0 && pbalance < 0) caseRightRight(unbalanced);
 		if (balance < 0 && pbalance > 0) caseRightLeft(unbalanced);
-		
 	}
 	
 	return return_val;
@@ -563,6 +574,7 @@ ibword insertNode(AVL_Node *node) {
 
 //Finds a node's address from a given key.
 ibword findNode(char *tkey) {
+
 	//Fix spacing for search.
 	char key[KEY_SIZE + 1];
 	for (char i = 0; i < KEY_SIZE; i++) {
@@ -588,16 +600,16 @@ ibword findNode(char *tkey) {
 	
 	//Go to the bottom.
 	while (1) {
-		ibword comparison = unistrcmp(key, root.key);
+		signed short comparison = unistrcmp(key, root.key);
 		if (comparison == 0) {
 			return root.address;
 		}
 		
 		//Move down the tree.
-		if (comparison > 0 && root.right != undefined) {
+		if (comparison > 0 && root.right != (ibword)undefined) {
 			root = fetchNode(root.right);
 			continue;
-		} else if (comparison < 0 && root.left != undefined) {
+		} else if (comparison < 0 && root.left != (ibword)undefined) {
 			root = fetchNode(root.left);
 			continue;
 		}
@@ -609,25 +621,13 @@ ibword findNode(char *tkey) {
 
 //Pribword a node.
 void printNode(AVL_Node n) {
-	/*if (n.address == -1) printString("Address: undefined\n");
-	else printf("Address: %u\n", n.address);
-	printf("\tKey: |%s|\n", n.key);
-	if (n.left == -1) printString("\tLeft child: undefined\n");
-	else printf("\tLeft child: %u\n", n.left);
-	if (n.right == -1) printf("\tRight child: undefined\n");
-	else printf("\tRight child: %u\n", n.right);
-	if (n.height == -1) printf("\tHeight: undefined\n");
-	else printf("\tHeight: %u\n", n.height);
-	//printf("\tBalance: %i\n", n.balance);
-	if (n.size == -1) printf("\tSize: undefined\n");
-	else printf("\tSize: %u\n", n.size);*/
 }
 
 void printTree(ibword pos) {
 	AVL_Node n = fetchNode(pos);
 	printNode(n);
-	if (n.left != undefined) printTree(n.left);
-	if (n.right != undefined) printTree(n.right);
+	if (n.left != (ibword)undefined) printTree(n.left);
+	if (n.right != (ibword)undefined) printTree(n.right);
 }
 
 //Verifies that a key is valid.

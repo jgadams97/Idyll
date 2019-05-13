@@ -12,6 +12,10 @@ typedef struct _avl_node {
 	ibword height;
 	ibword next;
 } AVL_Node;
+typedef struct _dangling_node {
+	ibword next;
+	ibword size;
+} AVL_Dangling;
 
 //Create a new node.
 AVL_Node newNode(ibword address, ibword size, char *key, ibword left, ibword right);
