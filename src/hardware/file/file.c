@@ -279,7 +279,7 @@ File createFile(short size, Folder *folder, char *name) {
 	}
 	myFile.name[FILE_NAME_SIZE] = 0;
 	//If it failed, then we can't store anymore files.
-	if (index == undefined) {
+	if (index == (char)undefined) {
 		myFile.status = 3;
 		return myFile;
 	}
@@ -307,7 +307,6 @@ File createFile(short size, Folder *folder, char *name) {
 		//If we haven't set the address yet, this is the address.
 		if (myFile.address == (short)undefined) {
 			myFile.address = addr;
-			//printf("Setting initial address as %i.\n", addr);
 		} else {
 			//Link previous data block to this one.
 			copyFromEEPROM(DATA_ADDR + paddr, &data, sizeof(short) * 2);
@@ -329,7 +328,6 @@ File createFile(short size, Folder *folder, char *name) {
 			addr = data.next;
 		} while (addr != (short)undefined && count > 0);
 		
-		//printf("%i.\n", paddr);
 		
 		//If we still have data left but our count is empty,
 		//	we need to tell the journal there's still empty
@@ -460,11 +458,9 @@ void resizeFile(File *myFile, short newSize) {
 }
 
 void printFileData(File f) {
-	//printf("File[%i] `%s` (%i bytes):\n", f.index, f.name, f.size);
 	short count = f.size % DATA_BLOCK_SIZE == 0 ?
 		f.size / DATA_BLOCK_SIZE : f.size / DATA_BLOCK_SIZE + 1;
 	if (count == 0) {
-		//printf("\tNo data blocks.\n");
 		return;
 	}
 	
@@ -473,7 +469,6 @@ void printFileData(File f) {
 	do {
 		FileDataBlock data;
 		copyFromEEPROM(DATA_ADDR + addr, &data, sizeof(FileDataBlock));
-		//printf("\tData Block %i = *%i (%i)\n", i++, addr, data.size);
 		addr = data.next;
 	} while (addr != (short)undefined && i < 30);
 }
