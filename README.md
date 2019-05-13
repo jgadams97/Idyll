@@ -77,7 +77,7 @@ gosub @mysub
 print 3
 ```
 
-The IF command can be used for conditional statements. The block of code between IF and FI will get executed only if the condition between IF and "then" is true.
+The IF command can be used for conditional statements. The block of code between IF and END will get executed only if the condition between IF and "then" is true.
 
 The format of an IF command is:
 ```
