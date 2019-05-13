@@ -35,6 +35,9 @@ char readChar() {
 	return c;
 }
 
+
+void backspace() {};
+
 //Check if a file exists.
 bool fileExistsOnDevice(char *fname) {
 	FILE *file = fopen(fname, "r");
@@ -67,23 +70,29 @@ ibword sizeOfFileOnDevice() {
 	return ftell(OPEN_FILE);
 }
 
+
 #endif
 
 #ifdef ATMEGA328P
 
 void writeChar(char c) {
 	lcdPutChar(c);
-	//Serial.print(c);
 }
 
 char readChar() {
 	char c = kbGetChar();
-	if (c != -1) lcdPutChar(c);
+	if (c != (char)-1 && c != 0 && c != 0x08) lcdPutChar(c);
 	return c;
 }
 
+void backspace() {
+	lcdBackspace();
+	lcdPutChar(' ');
+	lcdBackspace();
+}
+
 ibword sizeRAM() {
-	return 125000;
+	return 64000;
 }
 
 //File RAM_FILE;

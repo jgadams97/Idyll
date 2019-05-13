@@ -9,7 +9,7 @@ char PIN_LCD_EN;
 char LCD_DATA[LCD_COLS * LCD_ROWS];
 
 void lcdSetByte(char b) {
-	for (int i = 0; i < 8; i++) {
+	for (unsigned char i = 0; i < 8; i++) {
 		if (b & 0b10000000)
 			digitalWrite(PIN_LCD_DATA, HIGH);
 		else
@@ -74,6 +74,11 @@ void lcdCursor(char toggle) {
 	else lcdWriteRegister(0x0C);
 }
 
+void lcdCursorBlink(char blink) {
+	if (blink) lcdWriteRegister(0x0F);
+	else lcdWriteRegister(0x0E);
+}
+
 void lcdClear() {
 	lcdWriteRegister(0x01);
 	delay(1);
@@ -83,19 +88,19 @@ void lcdClear() {
 	LCD_COL = 0;
 }
 
-void lcdSetLine(char line) {
-	switch (line) {
+void lcdSetCursor(char row, char col) {
+	switch (row) {
 		case 0:
-			lcdWriteRegister(0x80);
+			lcdWriteRegister(0x80 + col);
 			break;
 		case 1:
-			lcdWriteRegister(0xC0);
+			lcdWriteRegister(0xC0 + col);
 			break;
 		case 2:
-			lcdWriteRegister(0x94);
+			lcdWriteRegister(0x94 + col);
 			break;
 		case 3:
-			lcdWriteRegister(0xD4);
+			lcdWriteRegister(0xD4 + col);
 			break;
 	}
 }
@@ -103,16 +108,16 @@ void lcdSetLine(char line) {
 void lcdScroll() {
 	char tmpRow = LCD_ROW - 1;
 	lcdClear();
-	for (int y = 0; y < LCD_ROWS - 1; y++) {
-		lcdSetLine(y);
-		for (int x = 0; x < LCD_COLS; x++) {
+	for (unsigned char y = 0; y < LCD_ROWS - 1; y++) {
+		lcdSetCursor(y, 0);
+		for (unsigned char x = 0; x < LCD_COLS; x++) {
 			LCD_DATA[y * LCD_COLS + x] = LCD_DATA[(y + 1) * LCD_COLS + x];
 			LCD_DATA[(y + 1) * LCD_COLS + x] = ' ';
 			lcdWriteData(LCD_DATA[y * LCD_COLS + x]);
 		}
 	}
 	LCD_ROW = tmpRow;
-	lcdSetLine(LCD_ROW);
+	lcdSetCursor(LCD_ROW, 0);
 }
 
 void lcdNewline() {
@@ -121,7 +126,7 @@ void lcdNewline() {
 	if (LCD_ROW == 4) {
 		lcdScroll();
 	} else {
-		lcdSetLine(LCD_ROW);
+		lcdSetCursor(LCD_ROW, 0);
 	}
 	
 }
@@ -140,8 +145,18 @@ void lcdPutChar(char c) {
 			if (LCD_ROW == 4) {
 				lcdScroll();
 			} else {
-				lcdSetLine(LCD_ROW);
+				lcdSetCursor(LCD_ROW, 0);
 			}
 		}
 	}
+}
+
+void lcdBackspace() {
+	if (LCD_COL == 0) {
+		LCD_COL = LCD_COLS - 1;
+		LCD_ROW--;
+	} else {
+		LCD_COL--;
+	}
+	lcdSetCursor(LCD_ROW, LCD_COL);
 }

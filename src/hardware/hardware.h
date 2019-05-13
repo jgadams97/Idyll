@@ -6,10 +6,10 @@ typedef unsigned char bool;
 #endif
 #define undefined -1
 #ifdef DESKTOP
-typedef int ibword;
+typedef unsigned int ibword;
 #endif
 #ifdef ARDUINO
-typedef long ibword;
+typedef unsigned short ibword;
 #endif
 char readRAM(ibword pos);
 void writeRAM(ibword pos, char b);
@@ -21,6 +21,7 @@ void openFileOnDevice(char *fname);
 void closeFileOnDevice();
 char readFileOnDevice(ibword pos);
 #ifdef ATMEGA328P
+#include <EEPROM.h>
 #include "23LC1024.h"
 #include "LCD2004.h"
 #include "keyboard.c"
