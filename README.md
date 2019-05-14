@@ -8,7 +8,7 @@ Both of these things make Idyllic ideal for low-memory applications. The ATMega3
 
 However, Idyllic can make use of external RAMs and program memory. The 23LC512, for example, can store 64kB of RAM, which can be used for variable storage with Idyllic. Idyllic stores variables using 32-bit pointers, so it can handle external memory devices up to 4.2 gigabytes. It can easily be recompiled with 64-bit pointers if need be, or 16-bit pointers if you do not need to address more than 2^16 bytes. Idyllic also stores these variables using AVL trees, so lookup times are fast.
 
-The version in the photo is compiled wtih 16-bit pointers due to program memory limitations on the ATMega328p (and 64kB < 2^16 bytes), but a larger microcontroller could handle larger pointer sizes assuming that you needed more memory. 
+The version in the photo is compiled wtih 16-bit pointers due to program memory limitations (not RAM) on the ATMega328p (and 64kB < 2^16 bytes), but a larger microcontroller could handle larger pointer sizes assuming that you needed more memory. 
 
 Variables in Idyllic can be declared with the DIM command.
 ```
