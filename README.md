@@ -177,7 +177,8 @@ print $str
 Subroutines can be recursive. 
 
 ```
-dim solution = 0
+dim factorial
+dim solution
 sub @factorial
         if base == 0 then
                 base = 1
