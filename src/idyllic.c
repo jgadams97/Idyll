@@ -758,19 +758,21 @@ bool compareIgnoreCase(const char *a, const char *b) {
 //Evaluates a command.
 //Making arrays global saves program space.
 #ifdef ARDUINO
+#define COMMAND_SIZE_MAX 10
 char outputKey[KEY_SIZE + 1];
 ibword argsStart[10];
 ibword argsSize[10];
 char argsType[10];
-char command[10];
+char command[COMMAND_SIZE_MAX];
 #endif
 char evalCommand() {
 	#ifdef DESKTOP
+	#define COMMAND_SIZE_MAX 20
 	char outputKey[KEY_SIZE + 1];
 	ibword argsStart[10];
 	ibword argsSize[10];
 	char argsType[10];
-	char command[10];
+	char command[COMMAND_SIZE_MAX];
 	#endif
 	ibword outputAddress = undefined;
 	char arg = 1;
@@ -790,10 +792,10 @@ char evalCommand() {
 	while (!isWS(c) && !isEOL(c)) {
 		if (!isAlpha(c) && c != '$')
 			return ERROR_SYNTAX;
-		if (commandPos == 10)
+		if (commandPos == COMMAND_SIZE_MAX)
 			return ERROR_UNKNOWN_COMMAND;
 		command[commandPos++] = c;
-		if (commandPos == 10)
+		if (commandPos == COMMAND_SIZE_MAX)
 			return ERROR_ARGUMENT_COUNT;
 		c = LINE_BUFF[++pos];
 	}
