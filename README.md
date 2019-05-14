@@ -2,7 +2,7 @@ IdyllicBASIC is a variant of BASIC that encapsulates memory management. This mea
 
 Here is IdyllicBASIC being ran on an ATMega328P microcontroller using a 23LC512 for external RAM.
 
-...updating image...
+![hi](https://i.imgur.com/pMSvOzO.jpg)
 
 Both of these things make Idyllic ideal for low-memory applications. The ATMega328P microcontroller, for example, has 2 KB of RAM. Normally, this would be not be enough to run BASIC scripts, as you could only fit a few lines of code into RAM.
 
