@@ -1057,7 +1057,7 @@ void printError(char e) {
 }
 
 //Evaluates a program at position.
-#define subStackSize 10
+#define subStackSize 100
 #ifdef ARDUINO
 ibword subStack[subStackSize];
 char subStackPos = 0;
