@@ -391,6 +391,82 @@ if (compareIgnoreCase(command, "cls")) {
 
 #endif
 
+#ifdef LINUX
+
+//Clear screen.
+if (compareIgnoreCase(command, "cls")) {
+	if (arg != 1)
+		return ERROR_ARGUMENT_COUNT;
+	system("clear");
+	return 0;
+}
+
+//Clear screen.
+if (compareIgnoreCase(command, "files")) {
+	if (arg != 1)
+		return ERROR_ARGUMENT_COUNT;
+	system("ls");
+	return 0;
+}
+
+//Loads a file into RAM.
+if (compareIgnoreCase(command, "delete")) {
+
+	if (arg != 2)
+		return ERROR_ARGUMENT_COUNT;
+		
+	char fileName[20];
+	char fPos = 0;
+	if (argsType[1] != TYPE_STR)
+		return ERROR_INVALID_TYPE;
+	char err = copyStringIntoEvalBuff(argsStart[1], argsSize[1]);
+	if (err != 0) return err;
+	char c;
+	while (c = readCharFromEvalBuff()) {
+		if (fPos == 19)
+			return ERROR_INVALID_OPTION;
+		fileName[fPos++] = c;
+	}
+	fileName[fPos] = 0;
+	
+	if (!fileExistsOnDevice(fileName))
+		return ERROR_FILE_NOT_FOUND;
+		
+	char command[24];
+	command[0] = 'r';
+	command[1] = 'm';
+	command[2] = ' ';
+	for (char i = 0; i < fPos; i++)
+		command[3 + i] = fileName[i];
+	command[fPos + 3] = 0;
+	system(command);
+	
+	return 0;
+}
+
+#endif
+
+
+#ifdef WINDOWS
+
+//Clear screen.
+if (compareIgnoreCase(command, "cls")) {
+	if (arg != 1)
+		return ERROR_ARGUMENT_COUNT;
+	system("cls");
+	return 0;
+}
+
+//Clear screen.
+if (compareIgnoreCase(command, "files")) {
+	if (arg != 1)
+		return ERROR_ARGUMENT_COUNT;
+	system("dir /b");
+	return 0;
+}
+
+#endif
+
 
 if (compareIgnoreCase(command, "floor")) {
 	if (arg != 2)
@@ -512,3 +588,5 @@ if (compareIgnoreCase(command, "poke")) {
 	return 0;
 }
 #endif
+
+#include "custom_commands.c"
