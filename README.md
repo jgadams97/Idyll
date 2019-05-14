@@ -6,7 +6,7 @@ Here is IdyllicBASIC being ran on an ATMega328P microcontroller using a 23LC512 
 
 Both of these things make Idyllic ideal for low-memory applications. The ATMega328P microcontroller, for example, has 2 KB of RAM. Normally, this would be not be enough to run BASIC scripts, as you could only fit a few lines of code into RAM.
 
-However, Idyllic can make use of external RAMs and program memory. The BASIC program does not need to be loaded into RAM to run, and all variables could be stored in an external RAM. The 23LC512, for example, can store 1 megabit of RAM, which can be used for variable storage with Idyllic. Idyllic stores variables using 32-bit pointers, so it can handle external memory devices up to 4.2 gigabytes. It can easily be recompiled with 64-bit pointers if need be, or 16-bit pointers if you do not need to address more than 2^16 bytes. Idyllic also stores these variables using AVL trees, so lookup times are fast.
+However, Idyllic can make use of external RAMs and program memory. The 23LC512, for example, can store 64KB of RAM, which can be used for variable storage with Idyllic. Idyllic stores variables using 32-bit pointers, so it can handle external memory devices up to 4.2 gigabytes. It can easily be recompiled with 64-bit pointers if need be, or 16-bit pointers if you do not need to address more than 2^16 bytes. Idyllic also stores these variables using AVL trees, so lookup times are fast.
 
 Variables in Idyllic can be declared with the DIM command.
 ```
