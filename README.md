@@ -174,4 +174,32 @@ $str[2] = "n"
 print $str
 ```
 
+Subroutines can be recursive. 
+
+```
+dim solution = 0
+sub @factorial
+        if base == 0 then
+                base = 1
+                solution = 1
+        end
+        if base == 1 then
+                solution = solution * factorial
+                factorial = factorial - 1
+                if factorial > 0 then
+                        gosub @factorial
+                end
+                base = 0
+                factorial = solution
+        end
+end
+
+factorial = 12
+gosub @factorial
+print factorial
+
+factorial = 8
+gosub @factorial
+print factorial
+``
 
