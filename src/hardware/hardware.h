@@ -20,6 +20,15 @@ bool fileExistsOnDevice(char *fname);
 void openFileOnDevice(char *fname);
 void closeFileOnDevice();
 char readFileOnDevice(ibword pos);
+//Checks if a character is an operator.
+bool isOperator(char c);
+
+//Checks if a character is a whitespace character.
+bool isWS(char c);
+
+//Checks if a character is an end of line character.
+bool isEOL(char c);
+
 #ifdef ATMEGA328P
 #include <EEPROM.h>
 #include "23LC1024.h"

@@ -1,2 +1,2 @@
 make:
-	gcc src/main.c -o build/idyll -DDESKTOP
+	gcc -Wall src/main.c -o build/idyll -DDESKTOP

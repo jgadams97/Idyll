@@ -137,3 +137,32 @@ ibword sizeOfFileOnDevice() {
 }
 
 #endif
+
+
+
+//Checks if a character is an operator.
+bool isOperator(char c) {
+        if (c == '+') return true;
+        if (c == '-') return true;
+        if (c == '*') return true;
+        if (c == '/') return true;
+        if (c == '&') return true;
+        if (c == '|') return true;
+        if (c == '^') return true;
+        if (c == '%') return true;
+        if (c == '=') return true;
+        if (c == '~') return true;
+        if (c == '>') return true;
+        if (c == '<') return true;
+        return false;
+}
+
+bool isWS(char c) {
+        if (c == ' ' || c == '\t' || c == '\r')                                                                return true;
+        return false;
+}
+
+bool isEOL(char c) {
+        if (c == '\n' || c == 0 || c == 255) return true;
+        return false;
+}

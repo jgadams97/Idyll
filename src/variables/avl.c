@@ -103,17 +103,6 @@ void printFloat(float num) {
 	printString(numBuff);
 }
 
-bool isWS(char c) {
-	if (c == ' ' || c == '\t' || c == '\r')
-		return true;
-	return false;
-}
-
-bool isEOL(char c) {
-	if (c == '\n' || c == 0 || c == 255) return true;
-	return false;
-}
-
 //Checks if a character is a letter.
 bool isAlpha(char c) {
 	if (c >= 'A' && c <= 'Z') return true;
@@ -136,23 +125,6 @@ bool isAlphaNum(char c) {
 bool isNum(char c) {
 	if (c >= '0' && c <= '9') return true;
 	if (c == '.') return true;
-	return false;
-}
-
-//Checks if a character is an operator.
-bool isOperator(char c) {
-	if (c == '+') return true;
-	if (c == '-') return true;
-	if (c == '*') return true;
-	if (c == '/') return true;
-	if (c == '&') return true;
-	if (c == '|') return true;
-	if (c == '^') return true;
-	if (c == '%') return true;
-	if (c == '=') return true;
-	if (c == '~') return true;
-	if (c == '>') return true;
-	if (c == '<') return true;
 	return false;
 }
 

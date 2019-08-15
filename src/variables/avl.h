@@ -73,16 +73,4 @@ bool isAlpha(char c);
 //Checks if a character is a number or a letter.
 bool isAlphaNum(char c);
 
-//Checks if a character is a number.
-bool isNum(char c);
-
-//Checks if a character is an operator.
-bool isOperator(char c);
-
-//Checks if a character is a whitespace character.
-bool isWS(char c);
-
-//Checks if a character is an end of line character.
-bool isEOL(char c);
-
 #include "avl.c"
