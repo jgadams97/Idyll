@@ -11,11 +11,12 @@ typedef struct {
 	char tmp_buff[BUFF_SIZE];
 	char buff[BUFF_SIZE];
 	char num_buff[NUM_BUFF_SIZE];
+	char in_ram;
 	unsigned char len;
-        ibword addr;
-        signed short pos, str_size, str_pos;
-        bool str;
-        char line_buff[LINE_BUFF_MAX + 1];
+    ibword addr, load_addr;
+    signed short pos, str_size, str_pos;
+    bool str;
+    char line_buff[LINE_BUFF_MAX + 1];
 	Journal j;
 } Evaluator;
 

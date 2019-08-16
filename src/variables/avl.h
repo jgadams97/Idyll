@@ -1,5 +1,6 @@
 #include "../hardware/hardware.h"
 #define KEY_SIZE 16
+bool AVL_LOCK = 0;
 ibword AVL_ROOT = 0;
 ibword AVL_END = 0;
 typedef struct _avl_node {
