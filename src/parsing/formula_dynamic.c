@@ -13,11 +13,13 @@ typedef struct {
 	char num_buff[NUM_BUFF_SIZE];
 	char in_ram;
 	unsigned char len;
-    ibword addr, load_addr;
-    signed short pos, str_size, str_pos;
-    bool str;
-    char line_buff[LINE_BUFF_MAX + 1];
+	ibword addr, load_addr;
+ 	signed short pos, str_size, str_pos;
+	bool str;
+	char line_buff[LINE_BUFF_MAX + 1];
 	Journal j;
+	char RAM[10000];
+	ibword avl_root, avl_end, ram_size;
 } Evaluator;
 
 void evaluateFormulaOnce(Evaluator *e) {

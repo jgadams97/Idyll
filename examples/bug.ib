@@ -1,0 +1,5 @@
+print 1
+goto @exit
+print 2
+@exit
+print 3

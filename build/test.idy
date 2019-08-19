@@ -1,0 +1,24 @@
+dim a
+dim b
+dim c
+dim $a
+dim $b
+
+print "First number: "
+$read => $a
+value $a => a
+print "Second number: "
+$read => $b
+value $b => b
+c = b
+
+@loop
+	print "Loop " + c + "..."
+	if c == 0 then
+		goto @break
+	end
+	a = a * b
+	c = c - 1
+@break
+
+print "Answer: " + a

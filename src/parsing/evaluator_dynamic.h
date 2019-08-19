@@ -1,4 +1,4 @@
-#include "../variables/variables.c"
+#include "../variables/variables_dynamic.c"
 #include "formula_dynamic.c"
 
 //Error types.

@@ -1,3 +1,4 @@
+
 #include "parsing/evaluator_dynamic.h"
 char evalPos(Evaluator *e, ibword pos);
 ibword PROGRAM_LOAD_ADDR;
@@ -44,14 +45,14 @@ char evalReference(Evaluator *e, ibword addr) {
 	ibword pos = 0;
 	char c;
 	char key[KEY_SIZE + 1];
-	char p = 0;
-	
+	unsigned char p = 0;
+
 	//Skip over garbage whitespace.
 	c = e->line_buff[pos];
 	while (isWS(c)) {
 		c = e->line_buff[++pos];
 	}
-	
+
 	//Load the key.
 	while (!isWS(c) && !isEOL(c)) {
 		key[p++] = c;
@@ -60,7 +61,7 @@ char evalReference(Evaluator *e, ibword addr) {
 			return ERROR_INVALID_KEY;
 	}
 	key[p] = 0;
-	
+
 	//Check if there is more garbage text afterwards.
 	while (isWS(c) && !isEOL(c)) {
 		c = e->line_buff[++pos];
@@ -69,7 +70,7 @@ char evalReference(Evaluator *e, ibword addr) {
 		return ERROR_SYNTAX;
 	if (!verifyKey(key))
 		return ERROR_INVALID_KEY;
-	
+
 	//Check if the key exists.
 	ibword addr2 = findNode(key);
 	if (addr2 != (ibword)undefined) {
@@ -81,7 +82,7 @@ char evalReference(Evaluator *e, ibword addr) {
 	}
 	//No issues. Create the key.
 	dimAdr(key, addr);
-	
+
 	return 0;
 }
 
@@ -89,13 +90,13 @@ char evalReference(Evaluator *e, ibword addr) {
 char evalSubroutine(Evaluator *e, ibword addr) {
 	char c = 0;
 	ibword pos = 0;
-	
+
 	//Skip over garbage whitespace.
 	c = e->line_buff[pos];
 	while (isWS(c)) {
 		c = e->line_buff[++pos];
 	}
-	
+
 	//Remove "sub".
 	c = e->line_buff[pos];
 	if (c != 'S' && c != 's')
@@ -111,7 +112,7 @@ char evalSubroutine(Evaluator *e, ibword addr) {
 	e->line_buff[pos] = ' ';
 	if (isWS(c))
 		return ERROR_SYNTAX;
-	
+
 	char err = evalReference(e, addr);
 	if (err != 0) return err;
 	else return ERROR_SUBROUTINE;
@@ -127,18 +128,18 @@ char evalAssignment(Evaluator *e, char *newstr) {
 
 	char c;
 	char key[KEY_SIZE];
-	char keyPos = 0;
+	unsigned char keyPos = 0;
 	ibword pos = 0;
-	
+
 	//Skip over white space.
 	c = e->line_buff[pos];
 	while (isWS(c) && !isEOL(c)) {
 		c = e->line_buff[++pos];
 	}
-	
+
 	//Syntax error.
 	if (isEOL(c)) return 1;
-	
+
 	//Read in key.
 	if (c == '$') {
 		key[keyPos++] = c;
@@ -151,20 +152,22 @@ char evalAssignment(Evaluator *e, char *newstr) {
 		c = e->line_buff[++pos];
 	}
 	key[keyPos] = 0;
-	
+
 	//Syntax error.
 	if (isEOL(c)) return ERROR_SYNTAX;
-	
+
 	//Key doesn't exist.
 	if (!verifyKey(key)) return ERROR_INVALID_KEY;
-	
+
 	//Check if key exists.
 	ibword addr;
 	if (newstr == NULL)
 		addr = findNode(key);
+	else
+		addr = undefined;
 	if (addr == (ibword)undefined && newstr == NULL)
 		return ERROR_KEY_NOT_FOUND;
-		
+
 	//Skip to equal sign.
 	char isArray = 0;
 	while (c != '=' && !isEOL(c)) {
@@ -174,12 +177,12 @@ char evalAssignment(Evaluator *e, char *newstr) {
 		}
 		c = e->line_buff[++pos];
 	}
-	
+
 	//Fetch array index.
 	ibword index;
 	if (isArray) {
 		char numBuff[11];
-		char numBuffPos = 0;
+		unsigned char numBuffPos = 0;
 		char numIsVar = 0;
 		char isOnlyNum = 1;
 		c = e->line_buff[++pos];
@@ -216,11 +219,11 @@ char evalAssignment(Evaluator *e, char *newstr) {
 			c = e->line_buff[++pos];
 		}
 	}
-	
+
 	//Syntax error.
 	if (isEOL(c))
 		return ERROR_SYNTAX;
-	
+
 	//Find start and size.
 	c = e->line_buff[++pos];
 	ibword start = pos;
@@ -229,7 +232,7 @@ char evalAssignment(Evaluator *e, char *newstr) {
 		c = e->line_buff[++pos];
 		size++;
 	}
-	
+
 	//Copy formula to eval buff.
 	if (isAlpha(key[0])) {
 		if (!verifyFormula(e, start, size))
@@ -267,10 +270,10 @@ char evalAssignment(Evaluator *e, char *newstr) {
 			e->str_pos = 0;
 			readCharFromEvalBuff(e);
 		} else {
-			writeRAM(strPos + AVL_END + sizeof(AVL_Node), c);
+			writeRAM(strPos + e->avl_end + sizeof(AVL_Node), c);
 			strPos++;
-			while (c = readCharFromEvalBuff(e)) {
-				writeRAM(strPos + AVL_END + sizeof(AVL_Node), c);
+			while ( (c = readCharFromEvalBuff(e)) ) {
+				writeRAM(strPos + e->avl_end + sizeof(AVL_Node), c);
 				strPos++;
 			}
 			if (strPos > strSize && newstr == NULL) {
@@ -285,10 +288,10 @@ char evalAssignment(Evaluator *e, char *newstr) {
 				//Recalculate string.
 				strPos = 0;
 				c = readCharFromEvalBuff(e);
-				writeRAM(strPos + AVL_END + sizeof(AVL_Node), c);
+				writeRAM(strPos + e->avl_end + sizeof(AVL_Node), c);
 				strPos++;
-				while (c = readCharFromEvalBuff(e)) {
-					writeRAM(strPos + AVL_END + sizeof(AVL_Node), c);
+				while ( (c = readCharFromEvalBuff(e)) ) {
+					writeRAM(strPos + e->avl_end + sizeof(AVL_Node), c);
 					strPos++;
 				}
 				strSize = strPos;
@@ -297,12 +300,12 @@ char evalAssignment(Evaluator *e, char *newstr) {
 			if (newstr != NULL) {
 				if (strPos <= 0)
 					return ERROR_SYNTAX;
-				char tmp = readRAM(AVL_END + sizeof(AVL_Node));
+				char tmp = readRAM(e->avl_end + sizeof(AVL_Node));
 				addr = dimStr(newstr, strPos);
 				writeRAM(addr + sizeof(AVL_Node), tmp);
 			} else {
 				for (int i = 0; i < strPos; i++) {
-					writeStr(addr, i, readRAM(i + AVL_END + sizeof(AVL_Node)));
+					writeStr(addr, i, readRAM(i + e->avl_end + sizeof(AVL_Node)));
 				}
 				if (strPos != strSize) {
 					writeStr(addr, strPos, 0);
@@ -313,7 +316,7 @@ char evalAssignment(Evaluator *e, char *newstr) {
 		//Syntax error.
 		return ERROR_SYNTAX;
 	}
-	
+
 	return 0;
 }
 
@@ -322,13 +325,13 @@ char evalAssignment(Evaluator *e, char *newstr) {
 char evalEnd(Evaluator *e) {
 	char c;
 	ibword pos = 0;
-	
+
 	//Skip over white space.
 	c = e->line_buff[pos];
 	while (isWS(c) && !isEOL(c)) {
 		c = e->line_buff[++pos];
 	}
-	
+
 	//Syntax error.
 	if (isEOL(c) || (c != 'E' && c != 'e'))
 		return ERROR_SYNTAX;
@@ -338,17 +341,17 @@ char evalEnd(Evaluator *e) {
 	c = e->line_buff[++pos];
 	if (isEOL(c) || (c != 'D' && c != 'd'))
 		return ERROR_SYNTAX;
-		
+
 	//Skip over white space.
 	c = e->line_buff[++pos];
 	while (isWS(c) && !isEOL(c)) {
 		c = e->line_buff[++pos];
 	}
-	
+
 	//Syntax error.
 	if (!isEOL(c))
 		return ERROR_SYNTAX;
-		
+
 	return 0;
 }
 
@@ -362,88 +365,90 @@ char evalConditional(Evaluator *e) {
 	char cond1 = ' ';
 	char cond2 = ' ';
 	char c;
-	char pos = 0;
+	unsigned char pos = 0;
 	char err;
-	
+
 	//Skip over white space.
 	c = e->line_buff[pos];
 	while (isWS(c) && !isEOL(c)) {
 		c = e->line_buff[++pos];
 	}
-	
+
 	//Syntax error.
 	if (isEOL(c))
 		return ERROR_SYNTAX;
-	
+
 	//Skip over command.
 	while (!isWS(c) && !isEOL(c)) {
 		c = e->line_buff[++pos];
 	}
-	
+
 	//Syntax error.
 	if (isEOL(c))
 		return ERROR_SYNTAX;
-		
+
 	//Skip over white space.
 	while (isWS(c) && !isEOL(c)) {
 		c = e->line_buff[++pos];
 	}
-	
+
 	//Get LHS.
 	lhsStart = pos;
 	while (!isWS(c) && !isEOL(c)) {
 		c = e->line_buff[++pos];
 		lhsSize++;
 	}
-	
+
 	//Syntax error.
 	if (isEOL(c))
 		return ERROR_SYNTAX;
-	
+        //short str_size, str_pos;
+        //bool str;
+
 	//Skip over white space.
 	while (isWS(c) && !isEOL(c)) {
 		c = e->line_buff[++pos];
 	}
-	
+
 	//Syntax error.
 	if (isEOL(c))
 		return ERROR_SYNTAX;
-	
+
 	//Get the first conditional.
 	cond1 = c;
 	c = e->line_buff[++pos];
-	
+
 	//Syntax error.
 	if (isEOL(c))
 		return ERROR_SYNTAX;
-		
+
 	//Get the second conditional.
 	if (!isWS(c)) {
 		cond2 = c;
 		c = e->line_buff[++pos];
 	}
-	
+
 	//Syntax error.
 	if (isEOL(c) || !isWS(c))
 		return ERROR_SYNTAX;
-	
+
 	//Skip over white space.
 	while (isWS(c) && !isEOL(c)) {
 		c = e->line_buff[++pos];
 	}
-	
+
 	//Get RHS.
 	rhsStart = pos;
 	while (!isWS(c) && !isEOL(c)) {
 		c = e->line_buff[++pos];
 		rhsSize++;
 	}
-	
+
 	//Skip over white space.
 	while (isWS(c) && !isEOL(c)) {
 		c = e->line_buff[++pos];
 	}
-	
+
 	//Check for "THEN"
 	if (isEOL(c) || (c != 't' && c != 'T'))
 		return ERROR_MISSING_THEN;
@@ -457,16 +462,16 @@ char evalConditional(Evaluator *e) {
 	if (isEOL(c) || (c != 'n' && c != 'N'))
 		return ERROR_MISSING_THEN;
 	c = e->line_buff[++pos];
-	
+
 	//Skip over whitespace.
 	while (isWS(c) && !isEOL(c)) {
 		c = e->line_buff[++pos];
 	}
-	
+
 	//Syntax error.
 	if (!isEOL(c))
 		return ERROR_SYNTAX;
-		
+
 	//Check conditional.
 	char lhsType = getExprType(e, lhsStart, lhsSize);
 	char rhsType = getExprType(e, rhsStart, rhsSize);
@@ -508,34 +513,34 @@ char evalConditional(Evaluator *e) {
 		char compSize = 8;
 		char compA[compSize + 1];
 		char compB[compSize + 1];
-		char compPosA = 0;
-		char compPosB = 0;
+		unsigned char compPosA = 0;
+		unsigned char compPosB = 0;
 		char c;
-		
+
 		//Load string A.
 		if (!verifyString(e, lhsStart, lhsSize))
 			return ERROR_SYNTAX;
 		err = copyStringIntoEvalBuff(e, lhsStart, lhsSize);
-		if (err != 0) return err;	
-		while (c = readCharFromEvalBuff(e)) {
+		if (err != 0) return err;
+		while ( (c = readCharFromEvalBuff(e)) ) {
 			compA[compPosA++] = c;
 			if (compPosA == compSize)
 				break;
 		}
 		compA[compPosA] = 0;
-	
+
 		//Load string B.
 		if (!verifyString(e, rhsStart, rhsSize))
 			return ERROR_SYNTAX;
 		err = copyStringIntoEvalBuff(e, rhsStart, rhsSize);
 		if (err != 0) return err;
-		while (c = readCharFromEvalBuff(e)) {
+		while ( (c = readCharFromEvalBuff(e)) ) {
 			compB[compPosB++] = c;
 			if (compPosB == compSize)
 				break;
 		}
 		compB[compPosB] = 0;
-		
+
 		//Check the conditions.
 		if (cond1 == '=' && cond2 == '=') {
 			if (strcmp(compA, compB) != 0)
@@ -547,20 +552,20 @@ char evalConditional(Evaluator *e) {
 			return ERROR_SYNTAX;
 		}
 	}
-	
+
 	return ERROR_CONDITIONAL_UNTRIGGERED;
-	
+
 }
 //Evaluate a declaration.
 //	0	No error.
 char evalDeclaration(Evaluator *e) {
 	char c;
 	char key[KEY_SIZE];
-	char keyPos = 0;
+	unsigned char keyPos = 0;
 	ibword pos = 0;
 	char ret = 0;
 	bool containsAssignment = false;
-	
+
 	//Skip over white space.
 	c = e->line_buff[pos];
 	while (isWS(c) && !isEOL(c)) {
@@ -569,24 +574,24 @@ char evalDeclaration(Evaluator *e) {
 	//Syntax error.
 	if (isEOL(c))
 		return ERROR_SYNTAX;
-	
+
 	//Skip over "dim".
 	pos += 3;
-	
+
 	//Syntax error.
 	c = e->line_buff[pos];
 	if (!isWS(c) || isEOL(c))
 		return ERROR_SYNTAX;
-	
+
 	//Skip over white space.
 	while (isWS(c) && !isEOL(c)) {
 		c = e->line_buff[++pos];
 	}
-	
+
 	//Syntax error.
 	if (isEOL(c))
 		return ERROR_SYNTAX;
-		
+
 	//Read in key.
 	key[keyPos++] = c;
 	c = e->line_buff[++pos];
@@ -601,28 +606,28 @@ char evalDeclaration(Evaluator *e) {
 	//Check to see if variable name is valid.
 	if (!verifyKey(key))
 		return ERROR_INVALID_KEY;
-	
+
 	//Make sure the variable isn't an address.
 	if (key[0] == '@')
 		return ERROR_INVALID_TYPE;
-	
+
 	//Check to see if variable already exists.
 	if (findNode(key) != (ibword)undefined)
 		return ERROR_KEY_EXISTS;
-	
+
 	//Syntax error.
 	char numBuff[11];
-	char numPos = 0;
+	unsigned char numPos = 0;
 	char hasArray = 0;
 	char smartString = 0;
 	ibword size = 0;
 	ibword arrayStart = pos;
 	ibword arrayEnd = pos;
-	
+
 	//Handle array.
 	if (c == '[') {
 		hasArray = 1;
-		
+
 		//Read in size.
 		char numIsVar = 0;
 		char isOnlyNum = 1;
@@ -655,57 +660,57 @@ char evalDeclaration(Evaluator *e) {
 				return ERROR_SYNTAX;
 		}
 		arrayEnd = pos;
-		
+
 		//Syntax error.
 		if (c != ']')
 			return ERROR_SYNTAX;
 		c = e->line_buff[++pos];
-		
+
 		//Skip over white space.
 		while (isWS(c) && !isEOL(c)) {
 			c = e->line_buff[++pos];
 		}
-	
+
 		//Syntax error.
 		if (!isEOL(c) && c != '=')
 			return ERROR_SYNTAX;
 		else if (c == '=')
 			containsAssignment = true;
-		
+
 		//Make sure the string isn't too massive.
 		if (size > STRING_SIZE_MAX || size < 0)
 			return ERROR_STRING_TOO_LARGE;
 		if (key[0] != '$' && size == 0)
 			return ERROR_STRING_TOO_LARGE;
-			
+
 		//Create the variable.
 		if (key[0] == '$')
 			dimStr(key, size);
 		else
 			dimArr(key, size);
-			
+
 	} else {
-			
+
 		//Skip over white space.
 		while (isWS(c) && !isEOL(c)) {
 			c = e->line_buff[++pos];
 		}
-		
+
 		//Syntax error.
 		if (!isEOL(c) && c != '=')
 			ERROR_SYNTAX;
 		else if (c == '=')
 			containsAssignment = true;
-		
+
 		//Create the variable.
 		if (key[0] == '$') {
 			smartString = 1;
 			if (!containsAssignment)
 				dimStr(key, 0);
-		} else 
+		} else
 			dimNum(key, 0);
 	}
-	
+
 	if (containsAssignment) {
 		//Remove brackets.
 		for (ibword i = arrayStart; i < arrayEnd; i++)
@@ -721,21 +726,21 @@ char evalDeclaration(Evaluator *e) {
 		e->line_buff[pos - 1] = ' ';
 		e->line_buff[pos] = ' ';
 		e->line_buff[pos + 1] = ' ';
-		
+
 		//Evaluate assignment.
 		if (smartString)
 			ret = evalAssignment(e, key);
 		else
 			ret = evalAssignment(e, NULL);	
 	}
-	
+
 	return ret;
 }
 
 bool compareIgnoreCase(const char *a, const char *b) {
 	char ca = a[0];
 	char cb = b[0];
-	char p = 0;
+	unsigned char p = 0;
 	while (ca != 0 && cb != 0) {
 		char d = ('a' - 'A');
 		if (
@@ -743,7 +748,7 @@ bool compareIgnoreCase(const char *a, const char *b) {
 			ca - d != cb &&
 			ca != cb
 			) {
-			return false;	
+			return false;
 		}
 		p++;
 		ca = a[p];
@@ -774,13 +779,13 @@ char evalCommand(Evaluator *e) {
 	char command[COMMAND_SIZE_MAX];
 	#endif
 	ibword outputAddress = undefined;
-	char arg = 1;
+	unsigned char arg = 1;
 	char c;
-	
-	char commandPos = 0;
+
+	unsigned char commandPos = 0;
 	ibword pos = 0;
 	bool isInQuotes = false;
-	
+
 	//Get start of command.
 	c = e->line_buff[pos];
 	while (isWS(c) && !isEOL(c)) {
@@ -800,7 +805,7 @@ char evalCommand(Evaluator *e) {
 	}
 	command[commandPos] = 0;
 	argsSize[0] = pos - argsStart[0];
-	
+
 	//Get arguments.
 	while (!isEOL(c)) {
 		//Get start of argument.
@@ -808,10 +813,10 @@ char evalCommand(Evaluator *e) {
 			c = e->line_buff[++pos];
 		}
 		argsStart[arg] = pos;
-		
+
 		//Keep track if it only contains white space.
 		char onlyWhiteSpace = 1;
-		
+
 		//Get end of argument.
 		while ( (c != ',' || isInQuotes) && !isEOL(c) ) {
 			if (c == '\"') {
@@ -822,12 +827,12 @@ char evalCommand(Evaluator *e) {
 			c = e->line_buff[++pos];
 		}
 		argsSize[arg] = pos - argsStart[arg];
-		
+
 		//Update argument only if not only white space.
 		if (!onlyWhiteSpace)
 			arg++;
 	}
-	
+
 	//Check for arrow.
 	bool hasArrow = false;
 	if (arg >= 2) {
@@ -835,7 +840,7 @@ char evalCommand(Evaluator *e) {
 			e->line_buff[argsStart[arg - 1] + 1] == '>') {
 			arg--;
 		}
-		
+
 		c = e->line_buff[--pos];
 		while (pos != argsSize[0]) {
 			if (c == '\"') break;
@@ -849,53 +854,53 @@ char evalCommand(Evaluator *e) {
 			c = e->line_buff[--pos];
 		}
 	}
-	
+
 	//Remove arrow from arguments.
 	if (hasArrow) {
 		//Remove arrow from arguments.
 		argsSize[arg - 1] = pos - argsStart[arg - 1] - 1;
-		
+
 		//Skip over whitespace.
 		pos += 2;
 		c = e->line_buff[pos++];
 		while (isWS(c) && !isEOL(c)) {
 			c = e->line_buff[pos++];
 		}
-		
+
 		//Syntax error.
-		if (isEOL(c)) 
+		if (isEOL(c))
 			return ERROR_SYNTAX;
-		
+
 		//Read in key.
-		char keyPos = 0;
+		unsigned char keyPos = 0;
 		while (!isWS(c) && !isEOL(c)) {
 			outputKey[keyPos++] = c;
 			c = e->line_buff[pos++];
 		}
 		outputKey[keyPos] = 0;
-		
+
 		//Skip over whitespace.
 		while (isWS(c) && !isEOL(c)) {
 			c = e->line_buff[pos++];
 		}
-		
+
 		//Syntax error.
 		if (!isEOL(c))
 			return ERROR_SYNTAX;
-		
+
 		//Check if the key is valid.
 		if (!verifyKey(outputKey))
 			return ERROR_INVALID_KEY;
-			
+
 		//Check if variable exists.
 		outputAddress = findNode(outputKey);
 		if (outputAddress == (ibword)undefined)
 			return ERROR_KEY_NOT_FOUND;
-		
+
 	}
-	
+
 	//Verify types.
-	for (char i = 1; i < arg; i++) {
+	for (unsigned char i = 1; i < arg; i++) {
 		argsType[i] = getExprType(e, argsStart[i], argsSize[i]);
 		if (argsType[i] == TYPE_NUM) {
 			if (!verifyFormula(e, argsStart[i], argsSize[i]))
@@ -1052,7 +1057,7 @@ void printError(char e) {
 			printString("Invalid mode");
 			break;
 	}
-	
+
 }
 
 //Evaluates a program at position.
@@ -1070,9 +1075,9 @@ char evalPos(Evaluator *e, ibword pos) {
 	ibword lineNum = 0;
 	#ifdef DESKTOP
 	ibword subStack[subStackSize];
-	char subStackPos = 0;
+	unsigned char subStackPos = 0;
 	char skipEnd[subStackSize];
-	char skipEndPos = 0;
+	unsigned char skipEndPos = 0;
 	#endif
 	skipEnd[0] = 0;
 	while (eof == 10) {
@@ -1108,6 +1113,8 @@ char evalPos(Evaluator *e, ibword pos) {
 			} else if (type == TYPE_CONDITIONAL && err == ERROR_CONDITIONAL_UNTRIGGERED) {
 				skipEnd[skipEndPos]++;
 			}
+		} else {
+			err = 0;
 		}
 		//Not an actual error.
 		if (err == ERROR_CONDITIONAL_UNTRIGGERED)
@@ -1146,12 +1153,12 @@ char evalPos(Evaluator *e, ibword pos) {
 		}
 		pos += size;
 	}
-	
+
 	if (skipMode != 0 || skipEnd[skipEndPos] != 0) {
 		printString("Missing END.\n");
 		return 50;
 	}
-	
+
 	return 0;
 }
 
